@@ -247,6 +247,9 @@
 
 <div class="scanner-container">
 
+  <button class="btn btn-primary" id="startCameraBtn">
+  Start Camera
+  </button>
   <!-- Camera View -->
   <div id="scanner"></div>
 
@@ -296,7 +299,11 @@
 <script>
   // Protect page and start scanning
   protectScanPage();
-  startScanner();
+  document
+    .getElementById("startCameraBtn")
+    .addEventListener("click", () => {
+      startScanner();
+    });
 </script>
 
 </body>
