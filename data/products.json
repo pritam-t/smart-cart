@@ -1,0 +1,57 @@
+{
+    "7143265017727": {
+        "name": "Amul Milk",
+        "price": 30,
+        "weight": "500ml"
+    },
+    "6161235907107": {
+        "name": "Bread",
+        "price": 40,
+        "weight": "400g"
+    },  
+    "7032572402817": {
+        "name": "Chocolate",
+        "price": 50,
+        "weight": "100g"
+    },
+    "1433116676521": {
+        "name": "Yoga-Bar",
+        "price": 25,
+        "weight": "120g"
+    },
+    "8811882639064": {
+        "name": "Mango Juice",
+        "price": 25,
+        "weight": "120g"
+    },
+    "8342634755560": {
+        "name": "Potato Chips",
+        "price": 25,
+        "weight": "120g"
+    },
+    "9033474318990": {
+        "name": "Deodorant",
+        "price": 25,
+        "weight": "120g"
+    },
+    "3360540974160": {
+        "name": "Face-Wash",
+        "price": 25,
+        "weight": "120g"
+    },
+    "5695264743432": {
+        "name": "T-Shirt",
+        "price": 25,
+        "weight": "120g"
+    },
+    "4294054344562": {
+        "name": "Soap",
+        "price": 25,
+        "weight": "120g"
+    },
+    "1286480389555": {
+        "name": "Shoes",
+        "price": 25,
+        "weight": "120g"
+    }
+}
