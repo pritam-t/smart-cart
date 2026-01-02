@@ -298,15 +298,28 @@
 <script src="js/scanner.js"></script>
 
 <script>
-  // Protect page and start scanning
   protectScanPage();
-  
-  document
-    .getElementById("startCameraBtn")
-    .addEventListener("click", () => {
+
+  const startBtn = document.getElementById("startCameraBtn");
+
+  startBtn.addEventListener("click", async () => {
+    try {
+      // Force permission prompt first
+      await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" }
+      });
+
+      // Now start Quagga AFTER permission
       startScanner();
-    });
+
+      startBtn.style.display = "none";
+    } catch (err) {
+      alert("Camera permission denied or unavailable");
+      console.error(err);
+    }
+  });
 </script>
+
 
 </body>
 </html>
