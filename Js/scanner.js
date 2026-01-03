@@ -89,35 +89,44 @@ function startScanner() {
    HANDLE BARCODE DETECTION
 ================================ */
 async function handleDetection(data) {
-  const barcode = data.codeResult.code;
+  if (scanLocked) return;   // 🔴 IMPORTANT
 
-  // Stop rapid duplicate scans
+  scanLocked = true;        // 🔴 LOCK immediately
   Quagga.offDetected(handleDetection);
 
-  const product = await getProductByBarcode(barcode);
+  const barcode = data.codeResult.code;
 
-  if (!product) {
-    alert("Product not found!");
-    resumeScanner();
-    return;
+  console.log("Scanned barcode:", barcode);
+
+  try {
+    const product = await getProductByBarcode(barcode);
+
+    if (!product) {
+      alert("Product not found!");
+      resumeScanner();
+      return;
+    }
+
+    // 1️⃣ Add to local bill
+    addToBill({
+      barcode,
+      name: product.name,
+      price: product.price,
+      weight: product.weight
+    });
+
+    // 2️⃣ Save to Supabase
+    await sendToSupabase({
+      barcode,
+      name: product.name,
+      price: product.price
+    });
+
+    console.log("Saved to Supabase:", barcode);
+
+  } catch (err) {
+    console.error("Scan error:", err);
   }
-
-  // 1️⃣ Add to local bill (UI)
-  addToBill({
-    barcode: barcode,
-    name: product.name,
-    price: product.price,
-    weight: product.weight
-  });
-
-  // 2️⃣ Save same data to Supabase (CLOUD)
-  sendToSupabase({
-    barcode: barcode,
-    name: product.name,
-    price: product.price
-  });
-
-  console.log("Scanned & saved:", barcode);
 
   resumeScanner();
 }
