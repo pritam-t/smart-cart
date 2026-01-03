@@ -1,6 +1,7 @@
 /* ===============================
    BILL DATA (GLOBAL)
 ================================ */
+
 window.billItems = [];
 window.totalAmount = 0;
 
@@ -33,6 +34,7 @@ window.addToBill = function (product) {
 window.renderBill = function () {
   const tbody = document.getElementById("billBody");
   const totalEl = document.getElementById("totalAmount");
+
   if (!tbody || !totalEl) return;
 
   tbody.innerHTML = "";
@@ -48,6 +50,11 @@ window.renderBill = function () {
       <td>${item.name}</td>
       <td>${item.qty}</td>
       <td>₹${rowTotal}</td>
+      <td>${item.weight}</td>
+      <td>
+        <button onclick="removeOneFromBill('${item.barcode}')">−</button>
+        <button onclick="removeItemCompletely('${item.barcode}')">🗑</button>
+      </td>
     `;
     tbody.appendChild(row);
   });
@@ -70,5 +77,35 @@ window.saveBillAndProceed = function () {
 window.clearBill = function () {
   window.billItems = [];
   window.totalAmount = 0;
+  window.renderBill();
+};
+
+/* ===============================
+   REMOVE ONE QUANTITY
+================================ */
+window.removeOneFromBill = function (barcode) {
+  const index = window.billItems.findIndex(
+    item => item.barcode === barcode
+  );
+
+  if (index === -1) return;
+
+  if (window.billItems[index].qty > 1) {
+    window.billItems[index].qty -= 1;
+  } else {
+    window.billItems.splice(index, 1);
+  }
+
+  window.renderBill();
+};
+
+/* ===============================
+   REMOVE ITEM COMPLETELY
+================================ */
+window.removeItemCompletely = function (barcode) {
+  window.billItems = window.billItems.filter(
+    item => item.barcode !== barcode
+  );
+
   window.renderBill();
 };
