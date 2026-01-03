@@ -21,6 +21,28 @@ function isValidEAN13(code) {
 }
 
 /* ===============================
+   SEND DATA TO ESP32 (LOCAL ONLY)
+================================ */
+function sendToESP32(product) {
+  // ESP32 only available in local environment
+  if (location.hostname !== "localhost") {
+    console.log("ESP32 disabled on hosted site");
+    return;
+  }
+
+  fetch("http://192.168.1.50/product", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(product)
+  })
+    .then(res => res.json())
+    .then(data => console.log("ESP32 response:", data))
+    .catch(err => console.error("ESP32 error:", err));
+}
+
+/* ===============================
    START CAMERA SCANNER
 ================================ */
 function startScanner() {
@@ -45,7 +67,7 @@ function startScanner() {
         }
       },
       decoder: {
-        readers: ["ean_reader"] // EAN-13 only (IMPORTANT)
+        readers: ["ean_reader"] // EAN-13 only
       },
       locate: true
     },
@@ -58,8 +80,6 @@ function startScanner() {
 
       Quagga.start();
       scannerActive = true;
-
-      // Attach listener only after start
       Quagga.onDetected(handleDetection);
     }
   );
@@ -69,71 +89,39 @@ function startScanner() {
    HANDLE BARCODE DETECTION
 ================================ */
 async function handleDetection(data) {
-  if (scanLocked) return;
-
   const barcode = data.codeResult.code;
 
-  // Reject invalid / noisy scans
-  if (!isValidEAN13(barcode)) {
-    console.warn("Rejected invalid barcode:", barcode);
-    return;
-  }
-
-  scanLocked = true;
+  // Stop rapid duplicate scans
   Quagga.offDetected(handleDetection);
 
-  console.log("Valid scanned barcode:", barcode);
+  const product = await getProductByBarcode(barcode);
 
-  try {
-    const product = await getProductByBarcode(barcode);
-
-    if (!product) {
-      alert("Product not found!");
-      resumeScanner();
-      return;
-    }
-
-    addToBill({
-      barcode: barcode,
-      name: product.name,
-      price: product.price,
-      weight: product.weight
-    });
-
-    sendToESP32({
-  barcode: barcode,
-  name: product.name,
-  price: product.price,
-  qty: 1
-});
-
-function sendToESP32(product) {
-  // Only try ESP32 when running locally
-  if (location.hostname !== "localhost") {
-    console.log("ESP32 disabled on hosted site");
+  if (!product) {
+    alert("Product not found!");
+    resumeScanner();
     return;
   }
 
-  fetch("http://192.168.1.50/product", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(product)
-  })
-  .then(res => res.json())
-  .then(data => console.log("ESP32:", data))
-  .catch(err => console.error("ESP32 error:", err));
-}
+  // 1️⃣ Add to local bill (UI)
+  addToBill({
+    barcode: barcode,
+    name: product.name,
+    price: product.price,
+    weight: product.weight
+  });
 
+  // 2️⃣ Save same data to Supabase (CLOUD)
+  sendToSupabase({
+    barcode: barcode,
+    name: product.name,
+    price: product.price
+  });
 
-
-  } catch (error) {
-    console.error("Scan processing error:", error);
-  }
+  console.log("Scanned & saved:", barcode);
 
   resumeScanner();
 }
+
 
 /* ===============================
    RESUME SCANNING (COOLDOWN)
@@ -142,11 +130,11 @@ function resumeScanner() {
   setTimeout(() => {
     scanLocked = false;
     Quagga.onDetected(handleDetection);
-  }, 800); // 1.2s cooldown
+  }, 800);
 }
 
 /* ===============================
-   STOP SCANNER (OPTIONAL)
+   STOP SCANNER
 ================================ */
 function stopScanner() {
   if (scannerActive) {
@@ -160,6 +148,24 @@ function stopScanner() {
 /* ===============================
    CLEANUP ON PAGE EXIT
 ================================ */
-window.addEventListener("beforeunload", () => {
-  stopScanner();
-});
+window.addEventListener("beforeunload", stopScanner);
+
+async function sendToSupabase(product) {
+  const { error } = await window.supabase
+    .from("cart")
+    .insert([
+      {
+        barcode: product.barcode,
+        name: product.name,
+        price: product.price,
+        qty: 1,
+        source: "web"
+      }
+    ]);
+
+  if (error) {
+    console.error("Supabase insert error:", error);
+  } else {
+    console.log("Saved to Supabase:", product.barcode);
+  }
+}
