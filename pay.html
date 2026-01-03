@@ -5,321 +5,100 @@
   <title>Pay Bill | XYZ Smart Store</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <!-- PDF Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
   <style>
-    /* ===============================
-       GLOBAL STYLES
-    ================================ */
+    /* ===== GLOBAL ===== */
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-family: Arial, sans-serif;
     }
 
     body {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #667eea, #764ba2);
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      padding: 0;
       color: #222;
     }
 
-    /* ===============================
-       HEADER
-    ================================ */
     header {
-      background: linear-gradient(135deg, #203a43, #2c5364);
+      background: #203a43;
       color: white;
       padding: 15px;
       text-align: center;
-      font-size: 18px;
       font-weight: bold;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
 
-    /* ===============================
-       CONTAINER
-    ================================ */
     .container {
-      width: 100%;
       max-width: 600px;
       margin: 20px auto;
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      padding: 40px 30px;
-      border-radius: 24px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-      animation: fadeIn 0.5s ease-out;
-    }
-
-    @keyframes fadeIn {
-      from { 
-        opacity: 0; 
-        transform: translateY(20px); 
-      }
-      to { 
-        opacity: 1; 
-        transform: translateY(0); 
-      }
-    }
-
-    h3 {
-      font-size: 24px;
-      font-weight: 700;
-      margin-bottom: 20px;
-      text-align: center;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    /* ===============================
-       TABLE STYLES
-    ================================ */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-      margin-bottom: 25px;
-    }
-
-    th, td {
-      padding: 12px 10px;
-      font-size: 14px;
-      text-align: center;
-      border-bottom: 1px solid #eee;
-    }
-
-    th {
-      background: linear-gradient(135deg, #203a43, #2c5364);
-      color: white;
-      font-weight: 600;
-      text-transform: uppercase;
-      font-size: 12px;
-      letter-spacing: 0.5px;
-    }
-
-    tbody tr {
-      transition: background-color 0.2s ease;
-    }
-
-    tbody tr:hover {
-      background-color: #f8f9fa;
-    }
-
-    tbody tr:last-child td {
-      border-bottom: none;
-    }
-
-    /* ===============================
-       TOTAL BOX
-    ================================ */
-    .total-box {
-      margin-bottom: 30px;
-      padding: 20px;
-      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-      border-radius: 16px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 20px;
-      font-weight: bold;
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { 
-        transform: scale(1); 
-      }
-      50% { 
-        transform: scale(1.02); 
-      }
-    }
-
-    .total-box span:first-child {
-      color: #2c5364;
-    }
-
-    #totalAmount {
-      color: #667eea;
-      font-weight: 800;
-      font-size: 24px;
-    }
-
-    /* ===============================
-       PAYMENT SECTION
-    ================================ */
-    .payment-section {
-      margin-top: 30px;
       background: white;
       padding: 25px;
       border-radius: 16px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     }
 
-    .payment-section h4 {
-      font-size: 18px;
-      font-weight: 700;
-      margin-bottom: 20px;
+    h3 {
       text-align: center;
-      color: #2c5364;
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      text-align: center;
+    }
+
+    th {
+      background: #2c5364;
+      color: white;
+    }
+
+    .total-box {
+      display: flex;
+      justify-content: space-between;
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 25px;
     }
 
     .payment-btn {
       width: 100%;
-      padding: 16px;
-      margin-bottom: 12px;
-      font-size: 16px;
+      padding: 14px;
+      margin-bottom: 10px;
       border: none;
-      border-radius: 12px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: bold;
       cursor: pointer;
-      font-weight: 700;
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-    }
-
-    .payment-btn::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-      transition: left 0.5s;
-    }
-
-    .payment-btn:hover::before {
-      left: 100%;
-    }
-
-    .payment-btn:hover {
-      transform: translateY(-2px);
-    }
-
-    .payment-btn:active {
-      transform: translateY(0);
-    }
-
-    .upi {
-      background: linear-gradient(135deg, #00c853 0%, #00e676 100%);
       color: white;
-      box-shadow: 0 8px 20px rgba(0, 200, 83, 0.3);
     }
 
-    .upi:hover {
-      box-shadow: 0 12px 30px rgba(0, 200, 83, 0.4);
+    .upi { background: #00c853; }
+    .card { background: #2979ff; }
+    .cash { background: #ff6f00; }
+
+    .pdf {
+      background: #6a1b9a;
     }
 
-    .card {
-      background: linear-gradient(135deg, #2979ff 0%, #448aff 100%);
-      color: white;
-      box-shadow: 0 8px 20px rgba(41, 121, 255, 0.3);
-    }
-
-    .card:hover {
-      box-shadow: 0 12px 30px rgba(41, 121, 255, 0.4);
-    }
-
-    .cash {
-      background: linear-gradient(135deg, #ff6f00 0%, #ff8f00 100%);
-      color: white;
-      box-shadow: 0 8px 20px rgba(255, 111, 0, 0.3);
-    }
-
-    .cash:hover {
-      box-shadow: 0 12px 30px rgba(255, 111, 0, 0.4);
-    }
-
-    /* ===============================
-       SUCCESS MESSAGE
-    ================================ */
     .success {
-      margin-top: 25px;
-      padding: 20px;
-      background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-      border: 2px solid #66bb6a;
+      margin-top: 20px;
+      padding: 15px;
+      background: #e8f5e9;
       color: #2e7d32;
-      border-radius: 16px;
+      border-radius: 10px;
       text-align: center;
       display: none;
-      font-weight: 700;
-      font-size: 16px;
-      box-shadow: 0 8px 20px rgba(102, 187, 106, 0.3);
-      animation: successFadeIn 0.5s ease-out;
-    }
-
-    @keyframes successFadeIn {
-      from {
-        opacity: 0;
-        transform: scale(0.9);
-      }
-      to {
-        opacity: 1;
-        transform: scale(1);
-      }
-    }
-
-    /* ===============================
-       RESPONSIVE
-    ================================ */
-    @media (max-width: 480px) {
-      header {
-        font-size: 16px;
-        padding: 12px;
-      }
-
-      .container {
-        padding: 30px 20px;
-        margin: 15px;
-      }
-
-      h3 {
-        font-size: 20px;
-      }
-
-      th, td {
-        font-size: 12px;
-        padding: 10px 8px;
-      }
-
-      .total-box {
-        font-size: 18px;
-        padding: 18px;
-      }
-
-      #totalAmount {
-        font-size: 22px;
-      }
-
-      .payment-section {
-        padding: 20px;
-      }
-
-      .payment-section h4 {
-        font-size: 16px;
-      }
-
-      .payment-btn {
-        font-size: 15px;
-        padding: 14px;
-      }
-
-      .success {
-        font-size: 14px;
-        padding: 16px;
-      }
+      font-weight: bold;
     }
   </style>
 </head>
@@ -330,57 +109,54 @@
 
 <div class="container">
 
-  <h3>📋 Bill Summary</h3>
+  <!-- ================= INVOICE AREA ================= -->
+  <div id="invoice">
+    <h3>📋 Bill Summary</h3>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Sr.</th>
-        <th>Product</th>
-        <th>Qty</th>
-        <th>Amount (₹)</th>
-      </tr>
-    </thead>
-    <tbody id="billBody"></tbody>
-  </table>
+    <table>
+      <thead>
+        <tr>
+          <th>Sr</th>
+          <th>Product</th>
+          <th>Qty</th>
+          <th>Amount (₹)</th>
+        </tr>
+      </thead>
+      <tbody id="billBody"></tbody>
+    </table>
 
-  <div class="total-box">
-    <span>💰 Total Amount</span>
-    <span id="totalAmount">₹0</span>
+    <div class="total-box">
+      <span>Total</span>
+      <span id="totalAmount">₹0</span>
+    </div>
+
+    <p style="text-align:center;font-size:12px;">
+      Thank you for shopping with XYZ Smart Store 🌱
+    </p>
   </div>
+  <!-- ================================================= -->
 
-  <div class="payment-section">
-    <h4>Select Payment Method</h4>
+  <button class="payment-btn upi" onclick="completePayment('UPI')">📱 Pay via UPI</button>
+  <button class="payment-btn card" onclick="completePayment('Card')">💳 Pay via Card</button>
+  <button class="payment-btn cash" onclick="completePayment('Cash')">💵 Pay with Cash</button>
 
-    <button class="payment-btn upi" onclick="completePayment('UPI')">
-      📱 Pay via UPI
-    </button>
-
-    <button class="payment-btn card" onclick="completePayment('Card')">
-      💳 Pay via Card
-    </button>
-
-    <button class="payment-btn cash" onclick="completePayment('Cash')">
-      💵 Pay with Cash
-    </button>
-  </div>
+  <button class="payment-btn pdf" onclick="downloadInvoice()">📄 Download Invoice (PDF)</button>
 
   <div class="success" id="successMsg">
-    ✅ Payment Successful! Thank you for shopping at XYZ Smart Store.
+    ✅ Payment Successful! Invoice downloaded.
   </div>
 
 </div>
 
 <!-- Navigation -->
-<script src="js/navigation.js"></script>
+<script src="/js/navigation.js"></script>
 
 <script>
   const billItems = JSON.parse(localStorage.getItem("bill")) || [];
   const total = localStorage.getItem("total") || 0;
 
-  // Protect page if opened directly
   if (billItems.length === 0) {
-    alert("No bill found. Redirecting to home.");
+    alert("No bill found");
     goToHomePage();
   }
 
@@ -400,15 +176,25 @@
   document.getElementById("totalAmount").innerText = "₹" + total;
 
   function completePayment(method) {
+    console.log("Payment:", method);
     document.getElementById("successMsg").style.display = "block";
 
-    console.log("Payment Method:", method);
-    console.log("Total Amount:", total);
-
-    // End session and redirect
     setTimeout(() => {
+      localStorage.clear();
       goToHomePage();
     }, 3000);
+  }
+
+  function downloadInvoice() {
+    const invoice = document.getElementById("invoice");
+
+    html2pdf().set({
+      margin: 0.5,
+      filename: `XYZ_Invoice_${Date.now()}.pdf`,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: "in", format: "a4", orientation: "portrait" }
+    }).from(invoice).save();
   }
 </script>
 
