@@ -86,7 +86,7 @@ function startScanner() {
 }
 
 /* ===============================
-   HANDLE BARCODE DETECTION
+  HANDLE BARCODE DETECTION
 ================================ */
 async function handleDetection(data) {
   if (scanLocked) return;   // 🔴 IMPORTANT
@@ -119,7 +119,8 @@ async function handleDetection(data) {
     await sendToSupabase({
       barcode,
       name: product.name,
-      price: product.price
+      price: product.price,
+      weight: product.weight
     });
 
     console.log("Saved to Supabase:", barcode);
@@ -167,6 +168,7 @@ async function sendToSupabase(product) {
         barcode: product.barcode,
         name: product.name,
         price: product.price,
+        weight: product.weight,
         qty: 1,
         source: "web"
       }
