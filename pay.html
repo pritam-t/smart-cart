@@ -8,6 +8,10 @@
   <!-- PDF Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/Js/supabase.js"></script>
+
   <style>
     /* ===== GLOBAL ===== */
     * {
@@ -67,7 +71,19 @@
       justify-content: space-between;
       font-size: 20px;
       font-weight: bold;
-      margin-bottom: 25px;
+      margin-bottom: 15px;
+    }
+
+    /* ===== WARNING UI ===== */
+    .warning-box {
+      display: none;
+      background: #fdecea;
+      color: #b71c1c;
+      border-left: 6px solid #d32f2f;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 15px;
     }
 
     .payment-btn {
@@ -82,13 +98,15 @@
       color: white;
     }
 
+    .payment-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
     .upi { background: #00c853; }
     .card { background: #2979ff; }
     .cash { background: #ff6f00; }
-
-    .pdf {
-      background: #6a1b9a;
-    }
+    .pdf { background: #6a1b9a; }
 
     .success {
       margin-top: 20px;
@@ -130,16 +148,21 @@
       <span id="totalAmount">₹0</span>
     </div>
 
+    <!-- ⚠️ WEIGHT WARNING -->
+    <div class="warning-box" id="weightWarning">
+      ⚠️ <b>Unusual weight detected</b><br>
+      Difference: <span id="weightDiff">0</span> g
+    </div>
+
     <p style="text-align:center;font-size:12px;">
       Thank you for shopping with XYZ Smart Store 🌱
     </p>
   </div>
   <!-- ================================================= -->
 
-  <button class="payment-btn upi" onclick="completePayment('UPI')">📱 Pay via UPI</button>
-  <button class="payment-btn card" onclick="completePayment('Card')">💳 Pay via Card</button>
-  <button class="payment-btn cash" onclick="completePayment('Cash')">💵 Pay with Cash</button>
-
+  <button class="payment-btn upi">📱 Pay via UPI</button>
+  <button class="payment-btn card">💳 Pay via Card</button>
+  <button class="payment-btn cash">💵 Pay with Cash</button>
   <button class="payment-btn pdf" onclick="downloadInvoice()">📄 Download Invoice (PDF)</button>
 
   <div class="success" id="successMsg">
@@ -148,10 +171,10 @@
 
 </div>
 
-<!-- Navigation -->
 <script src="/Js/navigation.js"></script>
 
 <script>
+  /* ================= BILL LOAD ================= */
   const billItems = JSON.parse(localStorage.getItem("bill")) || [];
   const total = localStorage.getItem("total") || 0;
 
@@ -175,16 +198,47 @@
 
   document.getElementById("totalAmount").innerText = "₹" + total;
 
-  function completePayment(method) {
-    console.log("Payment:", method);
-    document.getElementById("successMsg").style.display = "block";
+  /* ================= PAYMENT CONTROL ================= */
+  const buttons = document.querySelectorAll(".payment-btn");
+  const warningBox = document.getElementById("weightWarning");
+  const diffEl = document.getElementById("weightDiff");
 
-    setTimeout(() => {
-      localStorage.clear();
-      goToHomePage();
-    }, 3000);
+  let weightAlertShown = false;
+
+  function disablePayment() {
+    buttons.forEach(btn => btn.disabled = true);
   }
 
+  function enablePayment() {
+    buttons.forEach(btn => btn.disabled = false);
+    warningBox.style.display = "none";
+  }
+
+  disablePayment(); // 🔒 locked by default
+
+  /* ================= SUPABASE VALIDATION ================= */
+  async function checkWeightValidation() {
+    const { data, error } = await supabase
+      .from("validation")
+      .select("*")
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error || !data) return;
+
+    if (data.verified === false) {
+      diffEl.innerText = data.diff;
+      warningBox.style.display = "block";
+      disablePayment();
+    } else {
+      enablePayment();
+    }
+  }
+
+  setInterval(checkWeightValidation, 1500);
+
+  /* ================= PDF ================= */
   function downloadInvoice() {
     const invoice = document.getElementById("invoice");
 
