@@ -63,24 +63,6 @@ window.renderBill = function () {
 };
 
 /* ===============================
-   SAVE BILL & MOVE TO PAYMENT
-================================ */
-window.saveBillAndProceed = function () {
-  localStorage.setItem("bill", JSON.stringify(window.billItems));
-  localStorage.setItem("total", window.totalAmount);
-  window.location.href = "pay.html";
-};
-
-/* ===============================
-   CLEAR BILL
-================================ */
-window.clearBill = function () {
-  window.billItems = [];
-  window.totalAmount = 0;
-  window.renderBill();
-};
-
-/* ===============================
    REMOVE ONE QUANTITY
 ================================ */
 window.removeOneFromBill = function (barcode) {
@@ -108,4 +90,66 @@ window.removeItemCompletely = function (barcode) {
   );
 
   window.renderBill();
+};
+
+/* ===============================
+   CLEAR BILL (OPTIONAL)
+================================ */
+window.clearBill = function () {
+  window.billItems = [];
+  window.totalAmount = 0;
+  window.renderBill();
+};
+
+/* ===============================
+   FINALIZE CART & PROCEED TO PAY
+   (ONLY PLACE WHERE SUPABASE IS UPDATED)
+================================ */
+window.finalizeCartAndProceed = async function () {
+
+  const bill = window.billItems;
+
+  if (!bill || bill.length === 0) {
+    alert("Cart is empty");
+    return;
+  }
+
+  try {
+    /* 🧹 CLEAR OLD DATA (IMPORTANT) */
+    await supabase.from("cart").delete().neq("id", 0);
+    await supabase.from("cart_session").delete().neq("id", 0);
+
+    /* 1️⃣ PUSH CART TO SUPABASE */
+    for (const item of bill) {
+      const { error } = await supabase.from("cart").insert([{
+        barcode: item.barcode,
+        name: item.name,
+        price: item.price,
+        weight: item.weight,
+        qty: item.qty,
+        source: "web"
+      }]);
+
+      if (error) throw error;
+    }
+
+    /* 2️⃣ CREATE FINALIZED SESSION (ESP32 SIGNAL) */
+    const { error: sessionError } =
+      await supabase.from("cart_session").insert([{
+        status: "finalized"
+      }]);
+
+    if (sessionError) throw sessionError;
+
+    /* 3️⃣ SAVE LOCALLY FOR PAYMENT PAGE */
+    localStorage.setItem("bill", JSON.stringify(bill));
+    localStorage.setItem("total", window.totalAmount);
+
+    /* 4️⃣ NAVIGATE TO PAYMENT */
+    window.location.href = "pay.html";
+
+  } catch (err) {
+    console.error("Finalize error:", err);
+    alert("Failed to proceed to payment. Please try again.");
+  }
 };

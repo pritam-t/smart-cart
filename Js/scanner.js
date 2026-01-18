@@ -98,6 +98,12 @@ async function handleDetection(data) {
 
   console.log("Scanned barcode:", barcode);
 
+  if (!isValidEAN13(barcode)) {
+  console.warn("Invalid barcode ignored:", barcode);
+  resumeScanner();
+  return;
+}
+
   try {
     const product = await getProductByBarcode(barcode);
 
@@ -115,17 +121,18 @@ async function handleDetection(data) {
       weight: product.weight
     });
 
-    // 2️⃣ Save to Supabase
-    await sendToSupabase({
-      barcode,
-      name: product.name,
-      price: product.price,
-      weight: product.weight
-    });
+  //   // 2️⃣ Save to Supabase
+  //   await sendToSupabase({
+  //     barcode,
+  //     name: product.name,
+  //     price: product.price,
+  //     weight: product.weight
+  //   });
 
-    console.log("Saved to Supabase:", barcode);
+  //   console.log("Saved to Supabase:", barcode);
 
-  } catch (err) {
+  } 
+  catch (err) {
     console.error("Scan error:", err);
   }
 
@@ -160,23 +167,23 @@ function stopScanner() {
 ================================ */
 window.addEventListener("beforeunload", stopScanner);
 
-async function sendToSupabase(product) {
-  const { error } = await window.supabase
-    .from("cart")
-    .insert([
-      {
-        barcode: product.barcode,
-        name: product.name,
-        price: product.price,
-        weight: product.weight,
-        qty: 1,
-        source: "web"
-      }
-    ]);
+// async function sendToSupabase(product) {
+//   const { error } = await window.supabase
+//     .from("cart")
+//     .insert([
+//       {
+//         barcode: product.barcode,
+//         name: product.name,
+//         price: product.price,
+//         weight: product.weight,
+//         qty: 1,
+//         source: "web"
+//       }
+//     ]);
 
-  if (error) {
-    console.error("Supabase insert error:", error);
-  } else {
-    console.log("Saved to Supabase:", product.barcode);
-  }
-}
+//   if (error) {
+//     console.error("Supabase insert error:", error);
+//   } else {
+//     console.log("Saved to Supabase:", product.barcode);
+//   }
+// }
