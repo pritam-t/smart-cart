@@ -191,23 +191,36 @@
   }
 
   /* ================= CHECK VALIDATION (SESSION BASED) ================= */
-  async function checkValidation() {
-    const { data, error } = await supabase
-      .from("validation")
-      .select("*")
-      .eq("session_id", sessionId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
+async function checkWeightValidation() {
+  const sessionId = localStorage.getItem("session_id");
+  if (!sessionId) return;
 
-    if (!data) return;
+  const { data, error } = await supabase
+    .from("validation")
+    .select("*")
+    .eq("session_id", sessionId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle(); 
 
-    if (data.verified) {
-      enablePayment();
-    } else {
-      disablePayment(data.diff);
-    }
+  if (error) {
+    console.log("⏳ Validation not ready yet");
+    return;
   }
+
+  if (!data) {
+    console.log("⏳ Waiting for ESP32...");
+    return;
+  }
+
+  if (data.verified === false) {
+    document.getElementById("weightDiff").innerText = data.diff;
+    document.getElementById("weightWarning").style.display = "block";
+    disablePayment();
+  } else {
+    enablePayment();
+  }
+}
 
   /* 🔁 START POLLING ONLY ON PAYMENT PAGE */
   setInterval(checkValidation, 2000);
