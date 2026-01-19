@@ -107,17 +107,22 @@ window.clearBill = function () {
 ================================ */
 window.finalizeCartAndProceed = async function () {
 
-  if (!window.billItems.length) {
+  const bill = window.billItems;
+  const sessionId = localStorage.getItem("session_id");
+
+  if (!bill || bill.length === 0) {
     alert("Cart is empty");
     return;
   }
 
   try {
-    /* 1️⃣ CREATE UNIQUE SESSION ID */
-    const sessionId = crypto.randomUUID();
+    /* 1️⃣ CLEAR OLD DATA (SAFE FOR DEMO) */
+    await supabase.from("cart").delete().neq("id", 0);
+    await supabase.from("cart_session").delete().neq("id", 0);
+    await supabase.from("validation").delete().neq("id", 0);
 
     /* 2️⃣ PUSH CART ITEMS */
-    for (const item of window.billItems) {
+    for (const item of bill) {
       const { error } = await supabase.from("cart").insert([{
         session_id: sessionId,
         barcode: item.barcode,
@@ -130,7 +135,7 @@ window.finalizeCartAndProceed = async function () {
       if (error) throw error;
     }
 
-    /* 3️⃣ FINALIZE SESSION (ESP32 TRIGGER) */
+    /* 3️⃣ SIGNAL ESP32 (FINALIZED) */
     const { error: sessionError } = await supabase
       .from("cart_session")
       .insert([{
@@ -140,16 +145,15 @@ window.finalizeCartAndProceed = async function () {
 
     if (sessionError) throw sessionError;
 
-    /* 4️⃣ SAVE LOCALLY FOR PAYMENT PAGE */
-    localStorage.setItem("bill", JSON.stringify(window.billItems));
+    /* 4️⃣ SAVE FOR PAYMENT PAGE */
+    localStorage.setItem("bill", JSON.stringify(bill));
     localStorage.setItem("total", window.totalAmount);
-    localStorage.setItem("session_id", sessionId);
 
-    /* 5️⃣ GO TO PAYMENT */
+    /* 5️⃣ GO TO PAY PAGE */
     window.location.href = "pay.html";
 
   } catch (err) {
     console.error("Finalize error:", err);
-    alert("Failed to proceed to payment. Please try again.");
+    alert("Failed to proceed to payment.");
   }
 };
