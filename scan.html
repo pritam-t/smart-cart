@@ -1,17 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <title>Scan Products | XYZ Smart Store</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- QuaggaJS (Barcode Scanner Library) -->
+  <!-- QuaggaJS -->
   <script src="https://unpkg.com/quagga@0.12.1/dist/quagga.min.js"></script>
-  
+
+  <!-- ===============================
+       STYLES (UNCHANGED)
+  ================================ -->
   <style>
-    /* ===============================
-       GLOBAL STYLES
-    ================================ */
+    /* =============================== GLOBAL STYLES ================================ */
     * {
       margin: 0;
       padding: 0;
@@ -26,9 +28,7 @@
       color: #222;
     }
 
-    /* ===============================
-       HEADER
-    ================================ */
+    /* =============================== HEADER ================================ */
     header {
       background: linear-gradient(135deg, #203a43, #2c5364);
       color: white;
@@ -36,12 +36,10 @@
       text-align: center;
       font-size: 18px;
       font-weight: bold;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     }
 
-    /* ===============================
-       SCAN PAGE LAYOUT
-    ================================ */
+    /* =============================== SCAN PAGE LAYOUT ================================ */
     .scanner-container {
       display: flex;
       flex-direction: column;
@@ -61,18 +59,19 @@
       border: 3px solid #2c5364;
       background: black;
       margin-bottom: 30px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
       animation: fadeIn 0.5s ease-out;
     }
 
     @keyframes fadeIn {
-      from { 
-        opacity: 0; 
-        transform: translateY(20px); 
+      from {
+        opacity: 0;
+        transform: translateY(20px);
       }
-      to { 
-        opacity: 1; 
-        transform: translateY(0); 
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
       }
     }
 
@@ -82,12 +81,10 @@
       font-weight: 700;
       margin: 20px 0 15px;
       color: white;
-      text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
     }
 
-    /* ===============================
-       TABLE STYLES
-    ================================ */
+    /* =============================== TABLE STYLES ================================ */
     table {
       width: 100%;
       max-width: 600px;
@@ -95,12 +92,13 @@
       background: white;
       border-radius: 16px;
       overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
       margin-bottom: 25px;
       animation: fadeIn 0.6s ease-out;
     }
 
-    th, td {
+    th,
+    td {
       padding: 12px 10px;
       font-size: 14px;
       text-align: center;
@@ -142,9 +140,7 @@
       font-size: 20px;
     }
 
-    /* ===============================
-       BUTTON
-    ================================ */
+    /* =============================== BUTTON ================================ */
     .btn {
       width: 100%;
       max-width: 600px;
@@ -172,7 +168,7 @@
       left: -100%;
       width: 100%;
       height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
       transition: left 0.5s;
     }
 
@@ -198,9 +194,7 @@
       font-style: italic;
     }
 
-    /* ===============================
-       RESPONSIVE
-    ================================ */
+    /* =============================== RESPONSIVE ================================ */
     @media (max-width: 480px) {
       header {
         font-size: 16px;
@@ -220,7 +214,8 @@
         font-size: 20px;
       }
 
-      th, td {
+      th,
+      td {
         font-size: 12px;
         padding: 8px 5px;
       }
@@ -239,92 +234,103 @@
       }
     }
   </style>
+
 </head>
 
 <body>
 
-<header>🛒 Scan Products — XYZ Smart Store</header>
+  <header>🛒 Scan Products — XYZ Smart Store</header>
 
-<div class="scanner-container">
+  <div class="scanner-container">
 
-  <button class="btn btn-primary" id="startCameraBtn">
-    Start Camera
-  </button>
+    <button class="btn" id="startCameraBtn">Start Camera</button>
 
-  <!-- Camera View -->
-  <div id="scanner"></div>
+    <div id="scanner"></div>
 
-  <!-- Live Bill -->
-  <h3>📝 Live Bill</h3>
+    <h3>📝 Live Bill</h3>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Sr.</th>
-        <th>Product</th>
-        <th>Qty</th>
-        <th>Price (₹)</th>
-        <th>Weight</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody id="billBody">
-      <!-- Bill items will appear here -->
-    </tbody>
-    <tfoot>
-      <tr class="total-row">
-        <td colspan="3">Total</td>
-        <td colspan="2" id="totalAmount">₹0</td>
-      </tr>
-    </tfoot>
-  </table>
-  
-<button class="btn btn-primary" onclick="finalizeCartAndProceed()">
-  💳 Proceed to Pay
-</button>
+    <table>
+      <thead>
+        <tr>
+          <th>Sr.</th>
+          <th>Product</th>
+          <th>Qty</th>
+          <th>Price (₹)</th>
+          <th>Weight</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="billBody"></tbody>
+      <tfoot>
+        <tr class="total-row">
+          <td colspan="3">Total</td>
+          <td colspan="3" id="totalAmount">₹0</td>
+        </tr>
+      </tfoot>
+    </table>
 
-</div>
+    <button class="btn" id="proceedBtn">💳 Proceed to Pay</button>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/Js/supabase.js"></script>
+  </div>
 
-<!-- Navigation & Session Control -->
-<script src="Js/navigation.js"></script>
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/Js/supabase.js"></script>
+  <script src="Js/navigation.js"></script>
+  <script src="Js/dataLoader.js"></script>
+  <script src="Js/bill.js"></script>
+  <script src="Js/scanner.js"></script>
 
-<!-- Load JSON data -->
-<script src="Js/dataLoader.js"></script>
+  <script>
+    /* ===============================
+       PAGE PROTECTION
+    ================================ */
+    protectScanPage();
 
-<!-- Billing Logic -->
-<script src="Js/bill.js"></script>
-
-<!-- Scanner Logic -->
-<script src="Js/scanner.js"></script>
-
-<script>
-  protectScanPage();
-
-  const startBtn = document.getElementById("startCameraBtn");
-
-  startBtn.addEventListener("click", async () => {
-    try {
-      // Force permission prompt first
-      await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" }
-      });
-
-      // Now start Quagga AFTER permission
-      startScanner();
-
-      startBtn.style.display = "none";
-    } catch (err) {
-      alert("Camera permission denied or unavailable");
-      console.error(err);
+    /* ===============================
+       CREATE SESSION (ONCE)
+    ================================ */
+    if (!localStorage.getItem("session_id")) {
+      localStorage.setItem("session_id", crypto.randomUUID());
     }
-  });
-</script>
 
+    /* ===============================
+       CAMERA START
+    ================================ */
+    const startBtn = document.getElementById("startCameraBtn");
 
+    startBtn.addEventListener("click", async () => {
+      try {
+        await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment" }
+        });
+        startScanner();
+        startBtn.style.display = "none";
+      } catch (err) {
+        alert("Camera permission denied");
+      }
+    });
 
+    /* ===============================
+       PROCEED TO PAY (SAFE)
+    ================================ */
+    document.getElementById("proceedBtn").addEventListener("click", () => {
+
+      if (!window.billItems || window.billItems.length === 0) {
+        alert("Please scan at least one product");
+        return;
+      }
+
+      stopScanner(); // 🔥 IMPORTANT: stop camera
+      finalizeCartAndProceed();
+    });
+
+    /* ===============================
+       CLEANUP
+    ================================ */
+    window.addEventListener("beforeunload", stopScanner);
+  </script>
 
 </body>
+
 </html>
