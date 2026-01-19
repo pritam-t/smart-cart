@@ -4,6 +4,7 @@
 
 window.billItems = [];
 window.totalAmount = 0;
+window.currentSessionId = null;   // 🔥 FIX
 
 /* ===============================
    ADD PRODUCT TO BILL
@@ -63,17 +64,14 @@ window.renderBill = function () {
 };
 
 /* ===============================
-   REMOVE ONE QUANTITY
+   REMOVE ITEMS
 ================================ */
 window.removeOneFromBill = function (barcode) {
-  const index = window.billItems.findIndex(
-    item => item.barcode === barcode
-  );
-
+  const index = window.billItems.findIndex(i => i.barcode === barcode);
   if (index === -1) return;
 
   if (window.billItems[index].qty > 1) {
-    window.billItems[index].qty -= 1;
+    window.billItems[index].qty--;
   } else {
     window.billItems.splice(index, 1);
   }
@@ -81,50 +79,44 @@ window.removeOneFromBill = function (barcode) {
   window.renderBill();
 };
 
-/* ===============================
-   REMOVE ITEM COMPLETELY
-================================ */
 window.removeItemCompletely = function (barcode) {
-  window.billItems = window.billItems.filter(
-    item => item.barcode !== barcode
-  );
-
+  window.billItems = window.billItems.filter(i => i.barcode !== barcode);
   window.renderBill();
 };
 
 /* ===============================
-   CLEAR BILL (OPTIONAL)
-================================ */
-window.clearBill = function () {
-  window.billItems = [];
-  window.totalAmount = 0;
-  window.renderBill();
-};
-
-/* ===============================
-   FINALIZE CART & PROCEED TO PAY
-   ✅ ONLY PLACE SUPABASE IS UPDATED
+   FINALIZE CART (🔥 ONLY PLACE)
 ================================ */
 window.finalizeCartAndProceed = async function () {
 
-  const bill = window.billItems;
-  const sessionId = localStorage.getItem("session_id");
-
-  if (!bill || bill.length === 0) {
+  if (!window.billItems.length) {
     alert("Cart is empty");
     return;
   }
 
   try {
-    /* 1️⃣ CLEAR OLD DATA (SAFE FOR DEMO) */
+    /* 1️⃣ CLEAR OLD DATA */
     await supabase.from("cart").delete().neq("id", 0);
     await supabase.from("cart_session").delete().neq("id", 0);
     await supabase.from("validation").delete().neq("id", 0);
 
-    /* 2️⃣ PUSH CART ITEMS */
-    for (const item of bill) {
+    /* 2️⃣ CREATE SESSION */
+    const { data: session, error: sessionErr } =
+      await supabase
+        .from("cart_session")
+        .insert([{ status: "finalized" }])
+        .select()
+        .single();
+
+    if (sessionErr) throw sessionErr;
+
+    window.currentSessionId = session.id;   // 🔥 FIX
+    localStorage.setItem("session_id", session.id);
+
+    /* 3️⃣ INSERT CART */
+    for (const item of window.billItems) {
       const { error } = await supabase.from("cart").insert([{
-        session_id: sessionId,
+        session_id: window.currentSessionId,
         barcode: item.barcode,
         name: item.name,
         price: item.price,
@@ -135,26 +127,15 @@ window.finalizeCartAndProceed = async function () {
       if (error) throw error;
     }
 
-    /* 3️⃣ SIGNAL ESP32 (FINALIZED) */
-    const { error: sessionError } = await supabase
-      .from("cart_session")
-      .insert([{
-        session_id: sessionId,
-        status: "finalized"
-      }]);
-
-    if (sessionError) throw sessionError;
-
-    /* 4️⃣ SAVE FOR PAYMENT PAGE */
-    localStorage.setItem("session_id", sessionData.id);
-    localStorage.setItem("bill", JSON.stringify(bill));
+    /* 4️⃣ SAVE LOCALLY */
+    localStorage.setItem("bill", JSON.stringify(window.billItems));
     localStorage.setItem("total", window.totalAmount);
 
-    /* 5️⃣ GO TO PAY PAGE */
+    /* 5️⃣ GO TO PAYMENT */
     window.location.href = "pay.html";
 
   } catch (err) {
     console.error("Finalize error:", err);
-    alert("Failed to proceed to payment.");
+    alert("Failed to proceed to payment. Please try again.");
   }
 };
