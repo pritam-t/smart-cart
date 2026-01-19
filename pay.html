@@ -8,23 +8,14 @@
   <!-- PDF Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-  <!-- Supabase SDK -->
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/Js/supabase.js"></script>
 
   <style>
-    /* ===== GLOBAL ===== */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: Arial, sans-serif;
-    }
-
     body {
       background: linear-gradient(135deg, #667eea, #764ba2);
-      min-height: 100vh;
-      color: #222;
+      font-family: Arial, sans-serif;
     }
 
     header {
@@ -41,18 +32,11 @@
       background: white;
       padding: 25px;
       border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    }
-
-    h3 {
-      text-align: center;
-      margin-bottom: 20px;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 20px;
     }
 
     th, td {
@@ -71,10 +55,9 @@
       justify-content: space-between;
       font-size: 20px;
       font-weight: bold;
-      margin-bottom: 15px;
+      margin: 15px 0;
     }
 
-    /* ===== WARNING UI ===== */
     .warning-box {
       display: none;
       background: #fdecea;
@@ -82,8 +65,17 @@
       border-left: 6px solid #d32f2f;
       padding: 12px;
       border-radius: 8px;
-      font-size: 14px;
       margin-bottom: 15px;
+    }
+
+    .status-box {
+      background: #e3f2fd;
+      color: #0d47a1;
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+      margin-bottom: 15px;
+      font-size: 14px;
     }
 
     .payment-btn {
@@ -94,8 +86,8 @@
       border-radius: 10px;
       font-size: 16px;
       font-weight: bold;
-      cursor: pointer;
       color: white;
+      cursor: pointer;
     }
 
     .payment-btn:disabled {
@@ -107,17 +99,6 @@
     .card { background: #2979ff; }
     .cash { background: #ff6f00; }
     .pdf { background: #6a1b9a; }
-
-    .success {
-      margin-top: 20px;
-      padding: 15px;
-      background: #e8f5e9;
-      color: #2e7d32;
-      border-radius: 10px;
-      text-align: center;
-      display: none;
-      font-weight: bold;
-    }
   </style>
 </head>
 
@@ -127,9 +108,8 @@
 
 <div class="container">
 
-  <!-- ================= INVOICE AREA ================= -->
   <div id="invoice">
-    <h3>📋 Bill Summary</h3>
+    <h3 style="text-align:center;">📋 Bill Summary</h3>
 
     <table>
       <thead>
@@ -148,47 +128,41 @@
       <span id="totalAmount">₹0</span>
     </div>
 
-    <!-- ⚠️ WEIGHT WARNING -->
+    <div class="status-box" id="statusBox">
+      ⏳ Waiting for weight verification...
+    </div>
+
     <div class="warning-box" id="weightWarning">
       ⚠️ <b>Unusual weight detected</b><br>
       Difference: <span id="weightDiff">0</span> g
     </div>
-
-    <p style="text-align:center;font-size:12px;">
-      Thank you for shopping with XYZ Smart Store 🌱
-    </p>
   </div>
-  <!-- ================================================= -->
 
-  <button class="payment-btn upi">📱 Pay via UPI</button>
-  <button class="payment-btn card">💳 Pay via Card</button>
-  <button class="payment-btn cash">💵 Pay with Cash</button>
-  <button class="payment-btn pdf" onclick="downloadInvoice()">📄 Download Invoice (PDF)</button>
-
-  <div class="success" id="successMsg">
-    ✅ Payment Successful! Invoice downloaded.
-  </div>
+  <button class="payment-btn upi" disabled>📱 Pay via UPI</button>
+  <button class="payment-btn card" disabled>💳 Pay via Card</button>
+  <button class="payment-btn cash" disabled>💵 Pay with Cash</button>
+  <button class="payment-btn pdf" disabled onclick="downloadInvoice()">📄 Download Invoice</button>
 
 </div>
 
 <script src="/Js/navigation.js"></script>
 
 <script>
-  /* ================= BILL LOAD ================= */
-  const billItems = JSON.parse(localStorage.getItem("bill")) || [];
+  /* ================= LOAD BILL ================= */
+  const bill = JSON.parse(localStorage.getItem("bill")) || [];
   const total = localStorage.getItem("total") || 0;
+  const sessionId = localStorage.getItem("session_id");
 
-  if (billItems.length === 0) {
-    alert("No bill found");
+  if (!bill.length || !sessionId) {
+    alert("Invalid session");
     goToHomePage();
   }
 
   const tbody = document.getElementById("billBody");
-
-  billItems.forEach((item, index) => {
+  bill.forEach((item, i) => {
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td>${index + 1}</td>
+      <td>${i + 1}</td>
       <td>${item.name}</td>
       <td>${item.qty}</td>
       <td>₹${item.qty * item.price}</td>
@@ -198,57 +172,51 @@
 
   document.getElementById("totalAmount").innerText = "₹" + total;
 
-  /* ================= PAYMENT CONTROL ================= */
   const buttons = document.querySelectorAll(".payment-btn");
   const warningBox = document.getElementById("weightWarning");
+  const statusBox = document.getElementById("statusBox");
   const diffEl = document.getElementById("weightDiff");
-
-  let weightAlertShown = false;
-
-  function disablePayment() {
-    buttons.forEach(btn => btn.disabled = true);
-  }
 
   function enablePayment() {
     buttons.forEach(btn => btn.disabled = false);
+    statusBox.innerText = "✅ Weight verified. You may proceed.";
     warningBox.style.display = "none";
   }
 
-  disablePayment(); // 🔒 locked by default
+  function disablePayment(diff) {
+    buttons.forEach(btn => btn.disabled = true);
+    diffEl.innerText = diff;
+    warningBox.style.display = "block";
+    statusBox.innerText = "❌ Weight mismatch detected";
+  }
 
-  /* ================= SUPABASE VALIDATION ================= */
-  async function checkWeightValidation() {
+  /* ================= CHECK VALIDATION (SESSION BASED) ================= */
+  async function checkValidation() {
     const { data, error } = await supabase
       .from("validation")
       .select("*")
-      .order("updated_at", { ascending: false })
+      .eq("session_id", sessionId)
+      .order("created_at", { ascending: false })
       .limit(1)
       .single();
 
-    if (error || !data) return;
+    if (!data) return;
 
-    if (data.verified === false) {
-      diffEl.innerText = data.diff;
-      warningBox.style.display = "block";
-      disablePayment();
-    } else {
+    if (data.verified) {
       enablePayment();
+    } else {
+      disablePayment(data.diff);
     }
   }
 
-  setInterval(checkWeightValidation, 1500);
+  /* 🔁 START POLLING ONLY ON PAYMENT PAGE */
+  setInterval(checkValidation, 2000);
 
   /* ================= PDF ================= */
   function downloadInvoice() {
-    const invoice = document.getElementById("invoice");
-
-    html2pdf().set({
-      margin: 0.5,
-      filename: `XYZ_Invoice_${Date.now()}.pdf`,
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: "in", format: "a4", orientation: "portrait" }
-    }).from(invoice).save();
+    html2pdf().from(document.getElementById("invoice")).save(
+      `XYZ_Invoice_${Date.now()}.pdf`
+    );
   }
 </script>
 

@@ -103,49 +103,49 @@ window.clearBill = function () {
 
 /* ===============================
    FINALIZE CART & PROCEED TO PAY
-   (ONLY PLACE WHERE SUPABASE IS UPDATED)
+   ✅ ONLY PLACE SUPABASE IS UPDATED
 ================================ */
 window.finalizeCartAndProceed = async function () {
 
-  const bill = window.billItems;
-
-  if (!bill || bill.length === 0) {
+  if (!window.billItems.length) {
     alert("Cart is empty");
     return;
   }
 
   try {
-    /* 🧹 CLEAR OLD DATA (IMPORTANT) */
-    await supabase.from("cart").delete().neq("id", 0);
-    await supabase.from("cart_session").delete().neq("id", 0);
+    /* 1️⃣ CREATE UNIQUE SESSION ID */
+    const sessionId = crypto.randomUUID();
 
-    /* 1️⃣ PUSH CART TO SUPABASE */
-    for (const item of bill) {
+    /* 2️⃣ PUSH CART ITEMS */
+    for (const item of window.billItems) {
       const { error } = await supabase.from("cart").insert([{
+        session_id: sessionId,
         barcode: item.barcode,
         name: item.name,
         price: item.price,
         weight: item.weight,
-        qty: item.qty,
-        source: "web"
+        qty: item.qty
       }]);
 
       if (error) throw error;
     }
 
-    /* 2️⃣ CREATE FINALIZED SESSION (ESP32 SIGNAL) */
-    const { error: sessionError } =
-      await supabase.from("cart_session").insert([{
+    /* 3️⃣ FINALIZE SESSION (ESP32 TRIGGER) */
+    const { error: sessionError } = await supabase
+      .from("cart_session")
+      .insert([{
+        session_id: sessionId,
         status: "finalized"
       }]);
 
     if (sessionError) throw sessionError;
 
-    /* 3️⃣ SAVE LOCALLY FOR PAYMENT PAGE */
-    localStorage.setItem("bill", JSON.stringify(bill));
+    /* 4️⃣ SAVE LOCALLY FOR PAYMENT PAGE */
+    localStorage.setItem("bill", JSON.stringify(window.billItems));
     localStorage.setItem("total", window.totalAmount);
+    localStorage.setItem("session_id", sessionId);
 
-    /* 4️⃣ NAVIGATE TO PAYMENT */
+    /* 5️⃣ GO TO PAYMENT */
     window.location.href = "pay.html";
 
   } catch (err) {
