@@ -146,6 +146,7 @@ window.finalizeCartAndProceed = async function () {
     if (sessionError) throw sessionError;
 
     /* 4️⃣ SAVE FOR PAYMENT PAGE */
+    localStorage.setItem("session_id", sessionData.id);
     localStorage.setItem("bill", JSON.stringify(bill));
     localStorage.setItem("total", window.totalAmount);
 
