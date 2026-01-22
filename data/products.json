@@ -2,7 +2,7 @@
     "7143265017727": {
         "name": "Amul Milk",
         "price": 30,
-        "weight": "500ml"
+        "weight": "112g"
     },
     "6161235907107": {
         "name": "Bread",
@@ -12,7 +12,7 @@
     "7032572402817": {
         "name": "Chocolate",
         "price": 50,
-        "weight": "100g"
+        "weight": "112g"
     },
     "1433116676521": {
         "name": "Yoga-Bar",
@@ -32,12 +32,12 @@
     "9033474318990": {
         "name": "Deodorant",
         "price": 25,
-        "weight": "120g"
+        "weight": "112g"
     },
     "3360540974160": {
         "name": "Face-Wash",
         "price": 25,
-        "weight": "120g"
+        "weight": "112g"
     },
     "5695264743432": {
         "name": "T-Shirt",
@@ -52,6 +52,6 @@
     "1286480389555": {
         "name": "Shoes",
         "price": 25,
-        "weight": "120g"
+        "weight": "112g"
     }
 }

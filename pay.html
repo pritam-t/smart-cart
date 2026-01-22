@@ -2,20 +2,22 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Pay Bill | VISHAL Mega Mart</title>
+  <title>Pay Bill |   VISHAL Mega Mart</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- PDF Library -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/Js/supabase.js"></script>
 
+  <!-- PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
   <style>
     body {
       background: linear-gradient(135deg, #667eea, #764ba2);
+      min-height: 100vh;
       font-family: Arial, sans-serif;
+      color: #222;
     }
 
     header {
@@ -32,11 +34,13 @@
       background: white;
       padding: 25px;
       border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
+      margin-bottom: 20px;
     }
 
     th, td {
@@ -55,10 +59,16 @@
       justify-content: space-between;
       font-size: 20px;
       font-weight: bold;
-      margin: 15px 0;
+      margin-bottom: 15px;
     }
 
-    .warning-box {
+    .status {
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    .warning {
       display: none;
       background: #fdecea;
       color: #b71c1c;
@@ -68,17 +78,7 @@
       margin-bottom: 15px;
     }
 
-    .status-box {
-      background: #e3f2fd;
-      color: #0d47a1;
-      padding: 10px;
-      border-radius: 8px;
-      text-align: center;
-      margin-bottom: 15px;
-      font-size: 14px;
-    }
-
-    .payment-btn {
+    .btn {
       width: 100%;
       padding: 14px;
       margin-bottom: 10px;
@@ -90,7 +90,7 @@
       cursor: pointer;
     }
 
-    .payment-btn:disabled {
+    .btn:disabled {
       opacity: 0.6;
       cursor: not-allowed;
     }
@@ -128,34 +128,34 @@
       <span id="totalAmount">₹0</span>
     </div>
 
-    <div class="status-box" id="statusBox">
-      ⏳ Waiting for weight verification...
+    <div class="status" id="statusText">
+      ⏳ Waiting for ESP32 to verify weight...
     </div>
 
-    <div class="warning-box" id="weightWarning">
-      ⚠️ <b>Unusual weight detected</b><br>
-      Difference: <span id="weightDiff">0</span> g
+    <div class="warning" id="warningBox">
+      ⚠️ Weight mismatch detected<br>
+      Difference: <span id="diffValue">0</span> g
     </div>
   </div>
 
-  <button class="payment-btn upi" disabled>📱 Pay via UPI</button>
-  <button class="payment-btn card" disabled>💳 Pay via Card</button>
-  <button class="payment-btn cash" disabled>💵 Pay with Cash</button>
-  <button class="payment-btn pdf" disabled onclick="downloadInvoice()">📄 Download Invoice</button>
+  <button class="btn upi" disabled>📱 Pay via UPI</button>
+  <button class="btn card" disabled>💳 Pay via Card</button>
+  <button class="btn cash" disabled>💵 Pay with Cash</button>
+  <button class="btn pdf" onclick="downloadInvoice()">📄 Download Invoice</button>
 
 </div>
 
-<script src="/Js/navigation.js"></script>
-
 <script>
-  /* ================= LOAD BILL ================= */
+  /* ===============================
+     LOAD LOCAL DATA
+  ================================ */
   const bill = JSON.parse(localStorage.getItem("bill")) || [];
-  const total = localStorage.getItem("total") || 0;
-  const sessionId = localStorage.getItem("session_id");
+  const total = localStorage.getItem("total");
+  const SESSION_ID = localStorage.getItem("session_id");
 
-  if (!bill.length || !sessionId) {
+  if (!SESSION_ID || bill.length === 0) {
     alert("Invalid session");
-    goToHomePage();
+    location.href = "scan.html";
   }
 
   const tbody = document.getElementById("billBody");
@@ -172,63 +172,57 @@
 
   document.getElementById("totalAmount").innerText = "₹" + total;
 
-  const buttons = document.querySelectorAll(".payment-btn");
-  const warningBox = document.getElementById("weightWarning");
-  const statusBox = document.getElementById("statusBox");
-  const diffEl = document.getElementById("weightDiff");
+  /* ===============================
+     PAYMENT CONTROL
+  ================================ */
+  const buttons = document.querySelectorAll(".btn:not(.pdf)");
+  const statusText = document.getElementById("statusText");
+  const warningBox = document.getElementById("warningBox");
+  const diffValue = document.getElementById("diffValue");
 
   function enablePayment() {
-    buttons.forEach(btn => btn.disabled = false);
-    statusBox.innerText = "✅ Weight verified. You may proceed.";
+    buttons.forEach(b => b.disabled = false);
+    statusText.innerText = "✅ Weight verified. You may proceed to payment.";
     warningBox.style.display = "none";
   }
 
   function disablePayment(diff) {
-    buttons.forEach(btn => btn.disabled = true);
-    diffEl.innerText = diff;
+    buttons.forEach(b => b.disabled = true);
     warningBox.style.display = "block";
-    statusBox.innerText = "❌ Weight mismatch detected";
+    diffValue.innerText = diff;
+    statusText.innerText = "❌ Weight mismatch. Please contact staff.";
   }
 
-  /* ================= CHECK VALIDATION (SESSION BASED) ================= */
-async function checkValidation() {
-  const sessionId = localStorage.getItem("session_id");
-  if (!sessionId) return;
+  /* ===============================
+     VALIDATION POLLING (SESSION BASED)
+  ================================ */
+  async function checkValidation() {
+    const { data, error } = await supabase
+      .from("validation")
+      .select("verified,diff")
+      .eq("session_id", SESSION_ID)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-  const { data, error } = await supabase
-    .from("validation")
-    .select("*")
-    .eq("session_id", sessionId)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle(); 
+    if (error || !data) return;
 
-  if (error) {
-    console.log("⏳ Validation not ready yet");
-    return;
+    if (data.verified) {
+      enablePayment();
+      clearInterval(validationTimer);
+    } else {
+      disablePayment(data.diff);
+    }
   }
 
-  if (!data) {
-    console.log("⏳ Waiting for ESP32...");
-    return;
-  }
+  const validationTimer = setInterval(checkValidation, 2000);
 
-  if (data.verified === false) {
-    document.getElementById("weightDiff").innerText = data.diff;
-    document.getElementById("weightWarning").style.display = "block";
-    disablePayment();
-  } else {
-    enablePayment();
-  }
-}
-
-  /* 🔁 START POLLING ONLY ON PAYMENT PAGE */
-  setInterval(checkValidation, 2000);
-
-  /* ================= PDF ================= */
+  /* ===============================
+     PDF DOWNLOAD
+  ================================ */
   function downloadInvoice() {
     html2pdf().from(document.getElementById("invoice")).save(
-      `VISHAL_MEGA_MART_Invoice_${Date.now()}.pdf`
+      `Invoice_${Date.now()}.pdf`
     );
   }
 </script>

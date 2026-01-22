@@ -1,9 +1,19 @@
 /* ===============================
-   BILL DATA (GLOBAL)
+   GLOBAL BILL STATE
 ================================ */
 
 window.billItems = [];
 window.totalAmount = 0;
+
+/* ===============================
+   GET SELECTED CART ID
+================================ */
+const CART_ID = Number(localStorage.getItem("cart_id"));
+
+if (!CART_ID) {
+  alert("No cart selected. Please select a cart first.");
+  throw new Error("cart_id missing");
+}
 
 /* ===============================
    ADD PRODUCT TO BILL
@@ -25,13 +35,13 @@ window.addToBill = function (product) {
     });
   }
 
-  window.renderBill();
+  renderBill();
 };
 
 /* ===============================
-   RENDER BILL TABLE
+   RENDER BILL
 ================================ */
-window.renderBill = function () {
+function renderBill() {
   const tbody = document.getElementById("billBody");
   const totalEl = document.getElementById("totalAmount");
 
@@ -60,10 +70,12 @@ window.renderBill = function () {
   });
 
   totalEl.innerText = "₹" + window.totalAmount;
-};
+}
+
+window.renderBill = renderBill;
 
 /* ===============================
-   REMOVE ONE QUANTITY
+   REMOVE ONE ITEM
 ================================ */
 window.removeOneFromBill = function (barcode) {
   const index = window.billItems.findIndex(
@@ -78,7 +90,7 @@ window.removeOneFromBill = function (barcode) {
     window.billItems.splice(index, 1);
   }
 
-  window.renderBill();
+  renderBill();
 };
 
 /* ===============================
@@ -88,22 +100,21 @@ window.removeItemCompletely = function (barcode) {
   window.billItems = window.billItems.filter(
     item => item.barcode !== barcode
   );
-
-  window.renderBill();
+  renderBill();
 };
 
 /* ===============================
-   CLEAR BILL (OPTIONAL)
+   CLEAR BILL
 ================================ */
 window.clearBill = function () {
   window.billItems = [];
   window.totalAmount = 0;
-  window.renderBill();
+  renderBill();
 };
 
 /* ===============================
-   FINALIZE CART & PROCEED TO PAY
-   🔥 ONLY PLACE WHERE SUPABASE IS USED
+   FINALIZE CART & PROCEED
+   (ONLY SUPABASE WRITE POINT)
 ================================ */
 window.finalizeCartAndProceed = async function () {
 
@@ -113,47 +124,53 @@ window.finalizeCartAndProceed = async function () {
   }
 
   try {
-    /* 🧹 CLEAN OLD DATA (SAFE FOR DEMO) */
-    await supabase.from("cart").delete().neq("id", 0);
-    await supabase.from("cart_session").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-    await supabase.from("validation").delete().neq("id", 0);
+    console.log("🧹 Clearing old data for cart:", CART_ID);
 
-    /* 1️⃣ CREATE NEW SESSION (UUID) */
-    const { data: session, error: sessionErr } =
-      await supabase
-        .from("cart_session")
-        .insert([{ status: "finalized" }])
-        .select("id")
-        .single();
+    /* 1️⃣ CLEAR OLD DATA FOR THIS CART ONLY */
+    await supabase.from("cart").delete().eq("cart_id", CART_ID);
+    await supabase.from("cart_session").delete().eq("cart_id", CART_ID);
+    await supabase.from("validation").delete().eq("cart_id", CART_ID);
 
-    if (sessionErr) throw sessionErr;
+    /* 2️⃣ CREATE NEW SESSION (ESP SIGNAL) */
+    const { data: sessionData, error: sessionError } = await supabase
+      .from("cart_session")
+      .insert({
+        cart_id: CART_ID,
+        status: "finalized"
+      })
+      .select("id")
+      .single();
 
-    const sessionId = session.id; // ✅ UUID
-    localStorage.setItem("session_id", sessionId);
+    if (sessionError) throw sessionError;
 
-    /* 2️⃣ INSERT CART ITEMS WITH SESSION_ID */
+    const SESSION_ID = sessionData.id;
+    console.log("🆔 Session created:", SESSION_ID);
+
+    /* 3️⃣ INSERT CART ITEMS */
     for (const item of window.billItems) {
-      const { error } = await supabase.from("cart").insert([{
-        session_id: sessionId,   // ✅ UUID MATCH
+      const { error } = await supabase.from("cart").insert({
+        cart_id: CART_ID,
+        session_id: SESSION_ID,
         barcode: item.barcode,
         name: item.name,
         price: item.price,
         weight: item.weight,
         qty: item.qty
-      }]);
+      });
 
       if (error) throw error;
     }
 
-    /* 3️⃣ STORE BILL LOCALLY FOR PAY PAGE */
+    /* 4️⃣ SAVE LOCALLY FOR PAY PAGE */
     localStorage.setItem("bill", JSON.stringify(window.billItems));
     localStorage.setItem("total", window.totalAmount);
+    localStorage.setItem("session_id", SESSION_ID);
 
-    /* 4️⃣ GO TO PAYMENT PAGE */
+    /* 5️⃣ GO TO PAYMENT PAGE */
     window.location.href = "pay.html";
 
   } catch (err) {
-    console.error("Finalize error:", err);
+    console.error("❌ Finalize error:", err);
     alert("Failed to proceed to payment. Please try again.");
   }
 };

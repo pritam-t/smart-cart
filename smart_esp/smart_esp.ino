@@ -9,12 +9,10 @@ const char* password = "12345678";
 
 /* ========== SUPABASE ========== */
 const char* sessionUrl =
-  "https://kathcwjxdklbdcuewiiw.supabase.co/rest/v1/cart_session"
-  "?select=id,status&order=created_at.desc&limit=1";
+  "https://kathcwjxdklbdcuewiiw.supabase.co/rest/v1/cart_session?cart_id=eq.3&order=created_at.desc&limit=1";
 
 const char* cartUrl =
-  "https://kathcwjxdklbdcuewiiw.supabase.co/rest/v1/cart"
-  "?select=weight,qty";
+  "https://kathcwjxdklbdcuewiiw.supabase.co/rest/v1/cart?cart_id=eq.3&session_id=eq.<session_id>";
 
 const char* validationUrl =
   "https://kathcwjxdklbdcuewiiw.supabase.co/rest/v1/validation";
@@ -25,6 +23,8 @@ const char* supabaseKey =
 /* ========== HX711 ========== */
 #define LOADCELL_DOUT_PIN D6
 #define LOADCELL_SCK_PIN  D7
+
+#define CART_ID 3
 
 HX711 scale;
 float scale_factor = 388.3;
