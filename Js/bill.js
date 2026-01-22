@@ -6,14 +6,15 @@ window.billItems = [];
 window.totalAmount = 0;
 
 /* ===============================
-   GET SELECTED CART ID
+   GET SELECTED CART ID (INTEGER)
 ================================ */
 
-const CART_ID = localStorage.getItem("cart_id");
-if (!CART_ID) {
-  console.error("❌ cart_id missing");
-  alert("Cart not selected. Please start shopping again.");
-  throw new Error("cart_id missing");
+const CART_ID_RAW = localStorage.getItem("cart_id");
+const CART_ID = Number(CART_ID_RAW);
+
+if (!CART_ID || Number.isNaN(CART_ID)) {
+  alert("Invalid cart selected. Please start shopping again.");
+  throw new Error("Invalid cart_id");
 }
 
 /* ===============================
@@ -109,18 +110,7 @@ window.removeItemCompletely = function (barcode) {
 };
 
 /* ===============================
-   CLEAR BILL
-================================ */
-
-window.clearBill = function () {
-  window.billItems = [];
-  window.totalAmount = 0;
-  renderBill();
-};
-
-/* ===============================
    FINALIZE CART & PROCEED
-   🔥 ONLY SUPABASE WRITE POINT
 ================================ */
 
 window.finalizeCartAndProceed = async function () {
@@ -133,28 +123,24 @@ window.finalizeCartAndProceed = async function () {
   try {
     console.log("🧹 Clearing old data for cart:", CART_ID);
 
-    /* 1️⃣ CLEAR OLD DATA (ONLY THIS CART) */
+    /* 1️⃣ CLEAR OLD DATA (THIS CART ONLY) */
     await supabase.from("cart").delete().eq("cart_id", CART_ID);
     await supabase.from("validation").delete().eq("cart_id", CART_ID);
     await supabase.from("cart_session").delete().eq("cart_id", CART_ID);
 
-    /* 2️⃣ CREATE SESSION (ESP32 SIGNAL) */
+    /* 2️⃣ CREATE SESSION */
     const { data: sessionData, error: sessionError } = await supabase
       .from("cart_session")
       .insert([{ cart_id: CART_ID, status: "finalized" }])
       .select("id")
       .single();
 
-    if (sessionError || !sessionData) {
-      console.error("❌ Session creation failed", sessionError);
-      throw sessionError;
-    }
+    if (sessionError) throw sessionError;
 
     const SESSION_ID = sessionData.id;
-    console.log("🆔 Session created:", SESSION_ID);
 
-    /* 3️⃣ INSERT CART ITEMS (BATCH INSERT) */
-    const cartPayload = window.billItems.map(item => ({
+    /* 3️⃣ INSERT CART ITEMS (BATCH) */
+    const payload = window.billItems.map(item => ({
       cart_id: CART_ID,
       session_id: SESSION_ID,
       barcode: item.barcode,
@@ -166,19 +152,16 @@ window.finalizeCartAndProceed = async function () {
 
     const { error: cartError } = await supabase
       .from("cart")
-      .insert(cartPayload);
+      .insert(payload);
 
-    if (cartError) {
-      console.error("❌ Cart insert failed", cartError);
-      throw cartError;
-    }
+    if (cartError) throw cartError;
 
-    /* 4️⃣ SAVE LOCALLY FOR PAY PAGE */
+    /* 4️⃣ SAVE LOCALLY */
     localStorage.setItem("bill", JSON.stringify(window.billItems));
     localStorage.setItem("total", window.totalAmount);
     localStorage.setItem("session_id", SESSION_ID);
 
-    /* 5️⃣ NAVIGATE TO PAYMENT */
+    /* 5️⃣ GO TO PAYMENT */
     window.location.href = "pay.html";
 
   } catch (err) {
