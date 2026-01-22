@@ -16,7 +16,7 @@ function goToScanPage() {
 /* PROTECT SCAN PAGE */
 function protectScanPage() {
   if (!localStorage.getItem("sessionStarted")) {
-    window.location.href = "index.html";
+    window.location.href = "select-cart.html";
   }
 }
 
