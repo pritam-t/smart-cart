@@ -8,16 +8,18 @@ window.totalAmount = 0;
 /* ===============================
    GET SELECTED CART ID
 ================================ */
-const CART_ID = Number(localStorage.getItem("cart_id"));
 
+const CART_ID = localStorage.getItem("cart_id");
 if (!CART_ID) {
-  alert("No cart selected. Please select a cart first.");
+  console.error("❌ cart_id missing");
+  alert("Cart not selected. Please start shopping again.");
   throw new Error("cart_id missing");
 }
 
 /* ===============================
    ADD PRODUCT TO BILL
 ================================ */
+
 window.addToBill = function (product) {
   const existingItem = window.billItems.find(
     item => item.barcode === product.barcode
@@ -41,6 +43,7 @@ window.addToBill = function (product) {
 /* ===============================
    RENDER BILL
 ================================ */
+
 function renderBill() {
   const tbody = document.getElementById("billBody");
   const totalEl = document.getElementById("totalAmount");
@@ -77,6 +80,7 @@ window.renderBill = renderBill;
 /* ===============================
    REMOVE ONE ITEM
 ================================ */
+
 window.removeOneFromBill = function (barcode) {
   const index = window.billItems.findIndex(
     item => item.barcode === barcode
@@ -96,6 +100,7 @@ window.removeOneFromBill = function (barcode) {
 /* ===============================
    REMOVE ITEM COMPLETELY
 ================================ */
+
 window.removeItemCompletely = function (barcode) {
   window.billItems = window.billItems.filter(
     item => item.barcode !== barcode
@@ -106,6 +111,7 @@ window.removeItemCompletely = function (barcode) {
 /* ===============================
    CLEAR BILL
 ================================ */
+
 window.clearBill = function () {
   window.billItems = [];
   window.totalAmount = 0;
@@ -114,8 +120,9 @@ window.clearBill = function () {
 
 /* ===============================
    FINALIZE CART & PROCEED
-   (ONLY SUPABASE WRITE POINT)
+   🔥 ONLY SUPABASE WRITE POINT
 ================================ */
+
 window.finalizeCartAndProceed = async function () {
 
   if (window.billItems.length === 0) {
@@ -126,39 +133,44 @@ window.finalizeCartAndProceed = async function () {
   try {
     console.log("🧹 Clearing old data for cart:", CART_ID);
 
-    /* 1️⃣ CLEAR OLD DATA FOR THIS CART ONLY */
+    /* 1️⃣ CLEAR OLD DATA (ONLY THIS CART) */
     await supabase.from("cart").delete().eq("cart_id", CART_ID);
-    await supabase.from("cart_session").delete().eq("cart_id", CART_ID);
     await supabase.from("validation").delete().eq("cart_id", CART_ID);
+    await supabase.from("cart_session").delete().eq("cart_id", CART_ID);
 
-    /* 2️⃣ CREATE NEW SESSION (ESP SIGNAL) */
+    /* 2️⃣ CREATE SESSION (ESP32 SIGNAL) */
     const { data: sessionData, error: sessionError } = await supabase
       .from("cart_session")
-      .insert({
-        cart_id: CART_ID,
-        status: "finalized"
-      })
+      .insert([{ cart_id: CART_ID, status: "finalized" }])
       .select("id")
       .single();
 
-    if (sessionError) throw sessionError;
+    if (sessionError || !sessionData) {
+      console.error("❌ Session creation failed", sessionError);
+      throw sessionError;
+    }
 
     const SESSION_ID = sessionData.id;
     console.log("🆔 Session created:", SESSION_ID);
 
-    /* 3️⃣ INSERT CART ITEMS */
-    for (const item of window.billItems) {
-      const { error } = await supabase.from("cart").insert({
-        cart_id: CART_ID,
-        session_id: SESSION_ID,
-        barcode: item.barcode,
-        name: item.name,
-        price: item.price,
-        weight: item.weight,
-        qty: item.qty
-      });
+    /* 3️⃣ INSERT CART ITEMS (BATCH INSERT) */
+    const cartPayload = window.billItems.map(item => ({
+      cart_id: CART_ID,
+      session_id: SESSION_ID,
+      barcode: item.barcode,
+      name: item.name,
+      price: item.price,
+      weight: item.weight,
+      qty: item.qty
+    }));
 
-      if (error) throw error;
+    const { error: cartError } = await supabase
+      .from("cart")
+      .insert(cartPayload);
+
+    if (cartError) {
+      console.error("❌ Cart insert failed", cartError);
+      throw cartError;
     }
 
     /* 4️⃣ SAVE LOCALLY FOR PAY PAGE */
@@ -166,7 +178,7 @@ window.finalizeCartAndProceed = async function () {
     localStorage.setItem("total", window.totalAmount);
     localStorage.setItem("session_id", SESSION_ID);
 
-    /* 5️⃣ GO TO PAYMENT PAGE */
+    /* 5️⃣ NAVIGATE TO PAYMENT */
     window.location.href = "pay.html";
 
   } catch (err) {

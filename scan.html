@@ -287,6 +287,13 @@
     ================================ */
     protectScanPage();
 
+    const cartId = localStorage.getItem("cart_id");
+
+    if (!cartId) {
+      alert("Select cart first");
+      window.location.href = "select-cart.html";
+    }
+
     /* ===============================
        CREATE SESSION (ONCE)
     ================================ */

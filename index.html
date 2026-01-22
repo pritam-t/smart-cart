@@ -72,6 +72,16 @@
         </p>
     </div>
 
+    <button onclick="startShopping()">🛒 Start Shopping</button>
+
+    <script>
+    function startShopping() {
+    localStorage.removeItem("cart_id");
+    localStorage.removeItem("session_id");
+    window.location.href = "select-cart.html";
+    }
+    </script>
+
     <!-- Navigation Logic -->
     <script src="Js/navigation.js"></script>
 

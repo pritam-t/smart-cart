@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Select Cart</title>
+</head>
+<body>
+
+<h2>Select Cart Number (1–8)</h2>
+
+<select id="cartSelect">
+  <option value="">-- Select Cart --</option>
+  <option value="CART_1">Cart 1</option>
+  <option value="CART_2">Cart 2</option>
+  <option value="CART_3">Cart 3</option>
+  <option value="CART_4">Cart 4</option>
+  <option value="CART_5">Cart 5</option>
+  <option value="CART_6">Cart 6</option>
+  <option value="CART_7">Cart 7</option>
+  <option value="CART_8">Cart 8</option>
+</select>
+
+<br><br>
+
+<button onclick="confirmCart()">Continue</button>
+
+<script>
+function confirmCart() {
+  const cartId = document.getElementById("cartSelect").value;
+
+  if (!cartId) {
+    alert("Please select a cart");
+    return;
+  }
+
+  localStorage.setItem("cart_id", cartId);
+  window.location.href = "scan.html";
+}
+</script>
+
+</body>
+</html>

@@ -7,12 +7,19 @@
 const char* ssid = "Realme 9 Pro +";
 const char* password = "12345678";
 
-/* ========== SUPABASE ========== */
-const char* sessionUrl =
-  "https://kathcwjxdklbdcuewiiw.supabase.co/rest/v1/cart_session?cart_id=eq.3&order=created_at.desc&limit=1";
+String CART_ID = "CART_3";
 
-const char* cartUrl =
-  "https://kathcwjxdklbdcuewiiw.supabase.co/rest/v1/cart?cart_id=eq.3&session_id=eq.<session_id>";
+/* ========== SUPABASE ========== */
+String sessionUrl =
+  "https://xxxx.supabase.co/rest/v1/cart_session"
+  "?select=id,status"
+  "&cart_id=eq." + CART_ID +
+  "&order=created_at.desc&limit=1";
+
+String cartUrl =
+  "https://xxxx.supabase.co/rest/v1/cart"
+  "?select=weight"
+  "&cart_id=eq." + CART_ID;
 
 const char* validationUrl =
   "https://kathcwjxdklbdcuewiiw.supabase.co/rest/v1/validation";
@@ -23,8 +30,6 @@ const char* supabaseKey =
 /* ========== HX711 ========== */
 #define LOADCELL_DOUT_PIN D6
 #define LOADCELL_SCK_PIN  D7
-
-#define CART_ID 3
 
 HX711 scale;
 float scale_factor = 388.3;
