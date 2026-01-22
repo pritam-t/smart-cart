@@ -9,6 +9,25 @@
   <!-- QuaggaJS -->
   <script src="https://unpkg.com/quagga@0.12.1/dist/quagga.min.js"></script>
 
+  <script>
+  protectScanPage();
+
+  let cartId = localStorage.getItem("cart_id");
+
+  if (!cartId) {
+    const input = prompt("Enter Cart Number (1 - 8):");
+
+    const cartNumber = Number(input);
+
+    if (!cartNumber || cartNumber < 1 || cartNumber > 8) {
+      alert("Invalid cart number. Reload and try again.");
+      throw new Error("Cart not selected");
+    }
+
+    localStorage.setItem("cart_id", cartNumber);
+  }
+</script>
+
   <!-- ===============================
        STYLES (UNCHANGED)
   ================================ -->
@@ -287,12 +306,6 @@
     ================================ */
     protectScanPage();
 
-    const cartId = localStorage.getItem("cart_id");
-
-    if (!cartId) {
-      alert("Select cart first");
-      window.location.href = "select-cart.html";
-    }
 
     /* ===============================
        CREATE SESSION (ONCE)
