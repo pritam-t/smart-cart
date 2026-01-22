@@ -9,14 +9,14 @@
 
 <select id="cartSelect">
   <option value="">-- Select Cart --</option>
-  <option value="CART_1">Cart 1</option>
-  <option value="CART_2">Cart 2</option>
-  <option value="CART_3">Cart 3</option>
-  <option value="CART_4">Cart 4</option>
-  <option value="CART_5">Cart 5</option>
-  <option value="CART_6">Cart 6</option>
-  <option value="CART_7">Cart 7</option>
-  <option value="CART_8">Cart 8</option>
+  <option value="1">Cart 1</option>
+  <option value="2">Cart 2</option>
+  <option value="3">Cart 3</option>
+  <option value="4">Cart 4</option>
+  <option value="5">Cart 5</option>
+  <option value="6">Cart 6</option>
+  <option value="7">Cart 7</option>
+  <option value="8">Cart 8</option>
 </select>
 
 <br><br>
@@ -25,14 +25,21 @@
 
 <script>
 function confirmCart() {
-  const cartId = document.getElementById("cartSelect").value;
+  const cartIdRaw = document.getElementById("cartSelect").value;
 
-  if (!cartId) {
+  if (!cartIdRaw) {
     alert("Please select a cart");
     return;
   }
 
-  localStorage.setItem("cart_id", cartId);
+  const cartId = parseInt(cartIdRaw, 10); // convert to integer
+
+  if (Number.isNaN(cartId)) {
+    alert("Invalid cart selected");
+    return;
+  }
+
+  localStorage.setItem("cart_id", cartId); // still stored as string, but numeric string
   window.location.href = "scan.html";
 }
 </script>

@@ -8,14 +8,15 @@ window.totalAmount = 0;
 /* ===============================
    GET SELECTED CART ID (INTEGER)
 ================================ */
-
 const CART_ID_RAW = localStorage.getItem("cart_id");
-const CART_ID = 3;
+const CART_ID = parseInt(CART_ID_RAW, 10);
 
 if (!CART_ID || Number.isNaN(CART_ID)) {
   alert("Invalid cart selected. Please start shopping again.");
   throw new Error("Invalid cart_id");
 }
+
+console.log("Cart ID is:", CART_ID);
 
 /* ===============================
    ADD PRODUCT TO BILL
