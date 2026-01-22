@@ -10,7 +10,7 @@ window.totalAmount = 0;
 ================================ */
 
 const CART_ID_RAW = localStorage.getItem("cart_id");
-const CART_ID = Number(CART_ID_RAW);
+const CART_ID = 3;
 
 if (!CART_ID || Number.isNaN(CART_ID)) {
   alert("Invalid cart selected. Please start shopping again.");
