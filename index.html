@@ -71,24 +71,30 @@
             Scan • Pay • Exit — No Waiting ⏱️
         </p>
     </div>
+    
+<script>
+    // Read cart from QR URL (if present)
+    const params = new URLSearchParams(window.location.search);
+    const cartFromQR = params.get("cart");
 
-    <script>
-        // 🔥 Auto-detect cart from QR (if present)
-        const params = new URLSearchParams(window.location.search);
-        const cartFromQR = params.get("cart");
+    if (cartFromQR) {
+        localStorage.setItem("cart_id", cartFromQR);
+        console.log("Cart set from QR:", cartFromQR);
+    }
 
-        if (cartFromQR) {
-            localStorage.setItem("cart_id", cartFromQR);
-            window.location.href = "scan.html"; // auto-skip selection
-        }
+    function startShopping() {
+        const cart = localStorage.getItem("cart_id");
 
-        // Manual flow fallback
-        function startShopping() {
-            localStorage.removeItem("cart_id");
-            localStorage.removeItem("session_id");
+        if (cart) {
+            // Cart already known (from QR) → skip select-cart
+            window.location.href = "scan.html";
+        } else {
+            // No cart known → manual selection
             window.location.href = "select-cart.html";
         }
-    </script>
+    }
+</script>
+
 
 </body>
 
