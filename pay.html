@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Pay Bill |   VISHAL Mega Mart</title>
+  <title>Pay Bill | VISHAL Mega Mart</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Supabase -->
@@ -29,7 +29,7 @@
     }
 
     .container {
-      max-width: 600px;
+      max-width: 650px;
       margin: 20px auto;
       background: white;
       padding: 25px;
@@ -104,129 +104,184 @@
 
 <body>
 
-<header>💳 Final Bill & Payment —  VISHAL Mega Mart</header>
+<header>💳 Final Bill & Payment — VISHAL Mega Mart</header>
 
 <div class="container">
 
-  <div id="invoice">
-    <h3 style="text-align:center;">📋 Bill Summary</h3>
+  <div id="invoice" style="padding:20px; font-family:Arial;">
 
-    <table>
+    <!-- HEADER -->
+    <div style="text-align:center; border-bottom:2px solid #333; padding-bottom:10px;">
+      <h2 style="margin:0;">🛒 VISHAL Mega Mart</h2>
+      <p style="margin:4px 0;">Smart Billing System</p>
+      <p style="font-size:12px;">GST No: 27ABCDE1234F1Z5</p>
+    </div>
+
+    <!-- INVOICE META -->
+    <div style="display:flex; justify-content:space-between; margin-top:15px;">
+      <div>
+        <strong>Invoice No:</strong> <span id="invoiceNo"></span><br>
+        <strong>Date:</strong> <span id="invoiceDate"></span><br>
+        <strong>Session ID:</strong> <span id="sessionVal"></span>
+      </div>
+      <div style="text-align:right;">
+        <strong>Payment:</strong> <span id="payStatus">Pending</span><br>
+        <strong>Mode:</strong> Smart Cart
+      </div>
+    </div>
+
+    <!-- ITEMS TABLE -->
+    <table style="width:100%; border-collapse:collapse; margin-top:15px;">
       <thead>
-        <tr>
-          <th>Sr</th>
-          <th>Product</th>
-          <th>Qty</th>
-          <th>Amount (₹)</th>
+        <tr style="background:#f0f0f0;">
+          <th style="border:1px solid #ccc; padding:8px;">#</th>
+          <th style="border:1px solid #ccc; padding:8px;">Item</th>
+          <th style="border:1px solid #ccc; padding:8px;">Qty</th>
+          <th style="border:1px solid #ccc; padding:8px;">Price</th>
+          <th style="border:1px solid #ccc; padding:8px;">Total</th>
         </tr>
       </thead>
       <tbody id="billBody"></tbody>
     </table>
 
-    <div class="total-box">
-      <span>Total</span>
-      <span id="totalAmount">₹0</span>
+    <!-- TOTALS -->
+    <div style="margin-top:15px; text-align:right;">
+      <p><strong>Subtotal:</strong> ₹<span id="subTotal"></span></p>
+      <p><strong>GST (5%):</strong> ₹<span id="gstAmount"></span></p>
+      <h3>Grand Total: ₹<span id="grandTotal"></span></h3>
     </div>
 
-    <div class="status" id="statusText">
-      ⏳ Waiting for ESP32 to verify weight...
-    </div>
-
-    <div class="warning" id="warningBox">
-      ⚠️ Weight mismatch detected<br>
-      Difference: <span id="diffValue">0</span> g
-    </div>
   </div>
 
+  <!-- STATUS & WARNING -->
+  <div class="status" id="statusText">
+    ⏳ Waiting for ESP32 to verify weight...
+  </div>
+  <div class="warning" id="warningBox">
+    ⚠️ Weight mismatch detected<br>
+    Difference: <span id="diffValue">0</span> g
+  </div>
+
+  <!-- PAYMENT BUTTONS -->
   <button class="btn upi" disabled>📱 Pay via UPI</button>
   <button class="btn card" disabled>💳 Pay via Card</button>
   <button class="btn cash" disabled>💵 Pay with Cash</button>
-  <button class="btn pdf" id="pdfBtn" onclick="downloadInvoice()" disabled>
-    📄 Download Invoice
-  </button>
+  <button class="btn pdf" id="pdfBtn" onclick="downloadInvoice()" disabled>📄 Download Invoice</button>
 
 </div>
 
 <script>
-  /* ===============================
-     LOAD LOCAL DATA
-  ================================ */
-  const bill = JSON.parse(localStorage.getItem("bill")) || [];
-  const total = localStorage.getItem("total");
-  const SESSION_ID = localStorage.getItem("session_id");
+/* ===============================
+   LOAD LOCAL DATA
+================================ */
+const bill = JSON.parse(localStorage.getItem("bill")) || [];
+const total = parseFloat(localStorage.getItem("total")) || 0;
+const SESSION_ID = localStorage.getItem("session_id");
 
-  if (!SESSION_ID || bill.length === 0) {
-    alert("Invalid session");
-    location.href = "scan.html";
+if (!SESSION_ID || bill.length === 0) {
+  alert("Invalid session");
+  location.href = "scan.html";
+}
+
+/* ===============================
+   INVOICE META
+================================ */
+document.getElementById("invoiceNo").innerText = "INV-" + Date.now();
+document.getElementById("invoiceDate").innerText = new Date().toLocaleString();
+document.getElementById("sessionVal").innerText = SESSION_ID;
+
+/* ===============================
+   RENDER BILL TABLE
+================================ */
+const tbody = document.getElementById("billBody");
+tbody.innerHTML = "";
+bill.forEach((item, i) => {
+  const row = document.createElement("tr");
+  row.innerHTML = `
+    <td style="border:1px solid #ccc; padding:8px;">${i + 1}</td>
+    <td style="border:1px solid #ccc; padding:8px;">${item.name}</td>
+    <td style="border:1px solid #ccc; padding:8px;">${item.qty}</td>
+    <td style="border:1px solid #ccc; padding:8px;">₹${item.price}</td>
+    <td style="border:1px solid #ccc; padding:8px;">₹${item.qty * item.price}</td>
+  `;
+  tbody.appendChild(row);
+});
+
+/* ===============================
+   TOTALS WITH GST
+================================ */
+const gst = (total * 0.05).toFixed(2);
+const grandTotal = (total + parseFloat(gst)).toFixed(2);
+
+document.getElementById("subTotal").innerText = total.toFixed(2);
+document.getElementById("gstAmount").innerText = gst;
+document.getElementById("grandTotal").innerText = grandTotal;
+
+/* ===============================
+   PAYMENT CONTROL
+================================ */
+const buttons = document.querySelectorAll(".btn:not(.pdf)");
+const pdfBtn = document.getElementById("pdfBtn");
+const statusText = document.getElementById("statusText");
+const warningBox = document.getElementById("warningBox");
+const diffValue = document.getElementById("diffValue");
+const payStatus = document.getElementById("payStatus");
+
+function enablePayment() {
+  buttons.forEach(b => b.disabled = false);
+  pdfBtn.disabled = false;
+  statusText.innerText = "✅ Weight verified. You may proceed to payment.";
+  warningBox.style.display = "none";
+  payStatus.innerText = "Verified";
+}
+
+function disablePayment(diff) {
+  buttons.forEach(b => b.disabled = true);
+  pdfBtn.disabled = true;
+  warningBox.style.display = "block";
+  diffValue.innerText = diff;
+  statusText.innerText = "❌ Weight mismatch. Please contact staff.";
+  payStatus.innerText = "Pending";
+}
+
+/* ===============================
+   VALIDATION POLLING (SESSION)
+================================ */
+async function checkValidation() {
+  const { data, error } = await supabase
+    .from("validation")
+    .select("verified,diff")
+    .eq("session_id", SESSION_ID)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data) return;
+
+  if (data.verified) {
+    enablePayment();
+    clearInterval(validationTimer);
+  } else {
+    disablePayment(data.diff);
   }
+}
 
-  const tbody = document.getElementById("billBody");
-  bill.forEach((item, i) => {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${i + 1}</td>
-      <td>${item.name}</td>
-      <td>${item.qty}</td>
-      <td>₹${item.qty * item.price}</td>
-    `;
-    tbody.appendChild(row);
-  });
+const validationTimer = setInterval(checkValidation, 2000);
 
-  document.getElementById("totalAmount").innerText = "₹" + total;
+/* ===============================
+   PDF DOWNLOAD (IMPROVED)
+================================ */
+function downloadInvoice() {
+  const opt = {
+    margin: 0.4,
+    filename: `Invoice_${Date.now()}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+  };
 
-  /* ===============================
-     PAYMENT CONTROL
-  ================================ */
-  const buttons = document.querySelectorAll(".btn:not(.pdf)");
-  const statusText = document.getElementById("statusText");
-  const warningBox = document.getElementById("warningBox");
-  const diffValue = document.getElementById("diffValue");
-
-  function enablePayment() {
-    buttons.forEach(b => b.disabled = false);
-    statusText.innerText = "✅ Weight verified. You may proceed to payment.";
-    warningBox.style.display = "none";
-  }
-
-  function disablePayment(diff) {
-    buttons.forEach(b => b.disabled = true);
-    warningBox.style.display = "block";
-    diffValue.innerText = diff;
-    statusText.innerText = "❌ Weight mismatch. Please contact staff.";
-  }
-
-  /* ===============================
-     VALIDATION POLLING (SESSION BASED)
-  ================================ */
-  async function checkValidation() {
-    const { data, error } = await supabase
-      .from("validation")
-      .select("verified,diff")
-      .eq("session_id", SESSION_ID)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (error || !data) return;
-
-    if (data.verified) {
-      enablePayment();
-      clearInterval(validationTimer);
-    } else {
-      disablePayment(data.diff);
-    }
-  }
-
-  const validationTimer = setInterval(checkValidation, 2000);
-
-  /* ===============================
-     PDF DOWNLOAD
-  ================================ */
-  function downloadInvoice() {
-    html2pdf().from(document.getElementById("invoice")).save(
-      `Invoice_${Date.now()}.pdf`
-    );
-  }
+  html2pdf().set(opt).from(document.getElementById("invoice")).save();
+}
 </script>
 
 </body>
