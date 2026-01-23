@@ -7,19 +7,19 @@
 const char* ssid = "Realme 9 Pro +";
 const char* password = "12345678";
 
-String CART_ID = "CART_3";
+int CART_ID = 3;
 
 /* ========== SUPABASE ========== */
 String sessionUrl =
-  "https://xxxx.supabase.co/rest/v1/cart_session"
+  "https://kathcwjxdklbdcuewiiw.supabase.co/rest/v1/cart_session"
   "?select=id,status"
-  "&cart_id=eq." + CART_ID +
+  "&cart_id=eq." + String(CART_ID) +
   "&order=created_at.desc&limit=1";
 
 String cartUrl =
-  "https://xxxx.supabase.co/rest/v1/cart"
-  "?select=weight"
-  "&cart_id=eq." + CART_ID;
+  "https://kathcwjxdklbdcuewiiw.supabase.co/rest/v1/cart"
+  "?select=weight,qty"
+  "&cart_id=eq." + String(CART_ID);
 
 const char* validationUrl =
   "https://kathcwjxdklbdcuewiiw.supabase.co/rest/v1/validation";

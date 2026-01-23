@@ -63,7 +63,7 @@
             </div>
         </div>
 
-        <button class="btn btn-primary" onclick="goToScanPage()">
+        <button class="btn btn-primary" onclick="startShopping()">
             Start Shopping →
         </button>
 
@@ -72,8 +72,6 @@
         </p>
     </div>
 
-    <button onclick="startShopping()">🛒 Start Shopping</button>
-
     <script>
     function startShopping() {
     localStorage.removeItem("cart_id");
@@ -81,9 +79,6 @@
     window.location.href = "select-cart.html";
     }
     </script>
-
-    <!-- Navigation Logic -->
-    <script src="Js/navigation.js"></script>
 
 </body>
 
