@@ -12,76 +12,110 @@
   <!-- PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
   <style>
     body {
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      min-height: 100vh;
-      font-family: Arial, sans-serif;
-      color: #222;
+      font-family: 'Roboto', sans-serif;
+      background: #f0f2f5;
+      margin: 0;
+      padding: 0;
     }
 
     header {
       background: #203a43;
-      color: white;
-      padding: 15px;
+      color: #fff;
       text-align: center;
+      padding: 15px;
       font-weight: bold;
+      font-size: 1.2rem;
     }
 
     .container {
-      max-width: 650px;
+      max-width: 720px;
       margin: 20px auto;
-      background: white;
+      background: #fff;
       padding: 25px;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      border-radius: 12px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+
+    #invoice {
+      width: 100%;
+    }
+
+    .invoice-header {
+      text-align: center;
+      border-bottom: 2px solid #333;
+      padding-bottom: 10px;
+    }
+
+    .invoice-header h2 {
+      margin: 0;
+    }
+
+    .invoice-meta {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 15px;
+      font-size: 0.9rem;
+    }
+
+    .invoice-meta div {
+      line-height: 1.5;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 20px;
+      margin-top: 20px;
+      font-size: 0.9rem;
     }
 
     th, td {
+      border: 1px solid #ccc;
       padding: 10px;
-      border-bottom: 1px solid #ddd;
       text-align: center;
     }
 
     th {
       background: #2c5364;
-      color: white;
+      color: #fff;
     }
 
-    .total-box {
-      display: flex;
-      justify-content: space-between;
-      font-size: 20px;
-      font-weight: bold;
-      margin-bottom: 15px;
+    tbody tr:nth-child(even) {
+      background: #f9f9f9;
     }
 
-    .status {
+    .totals {
+      margin-top: 20px;
+      text-align: right;
+      font-size: 1rem;
+    }
+
+    .totals p {
+      margin: 5px 0;
+    }
+
+    .totals h3 {
+      margin-top: 10px;
+      margin-bottom: 0;
+    }
+
+    .footer {
       text-align: center;
-      font-weight: bold;
-      margin-bottom: 15px;
-    }
-
-    .warning {
-      display: none;
-      background: #fdecea;
-      color: #b71c1c;
-      border-left: 6px solid #d32f2f;
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 15px;
+      margin-top: 20px;
+      font-size: 0.85rem;
+      border-top: 1px dashed #aaa;
+      padding-top: 10px;
+      color: #555;
     }
 
     .btn {
       width: 100%;
       padding: 14px;
-      margin-bottom: 10px;
+      margin: 10px 0;
       border: none;
       border-radius: 10px;
       font-size: 16px;
@@ -99,6 +133,23 @@
     .card { background: #2979ff; }
     .cash { background: #ff6f00; }
     .pdf { background: #6a1b9a; }
+    
+    .status {
+      text-align: center;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+
+    .warning {
+      display: none;
+      background: #fdecea;
+      color: #b71c1c;
+      border-left: 6px solid #d32f2f;
+      padding: 12px;
+      border-radius: 8px;
+      margin: 10px 0;
+    }
+
   </style>
 </head>
 
@@ -108,58 +159,62 @@
 
 <div class="container">
 
-  <div id="invoice" style="padding:20px; font-family:Arial;">
+  <div id="invoice">
 
     <!-- HEADER -->
-    <div style="text-align:center; border-bottom:2px solid #333; padding-bottom:10px;">
-      <h2 style="margin:0;">🛒 VISHAL Mega Mart</h2>
-      <p style="margin:4px 0;">Smart Billing System</p>
+    <div class="invoice-header">
+      <h2>🛒 VISHAL Mega Mart</h2>
+      <p>Smart Billing System</p>
       <p style="font-size:12px;">GST No: 27ABCDE1234F1Z5</p>
     </div>
 
     <!-- INVOICE META -->
-    <div style="display:flex; justify-content:space-between; margin-top:15px;">
+    <div class="invoice-meta">
       <div>
         <strong>Invoice No:</strong> <span id="invoiceNo"></span><br>
         <strong>Date:</strong> <span id="invoiceDate"></span><br>
         <strong>Session ID:</strong> <span id="sessionVal"></span>
       </div>
       <div style="text-align:right;">
-        <strong>Payment:</strong> <span id="payStatus">Pending</span><br>
+        <strong>Payment:</strong> Pending<br>
         <strong>Mode:</strong> Smart Cart
       </div>
     </div>
 
     <!-- ITEMS TABLE -->
-    <table style="width:100%; border-collapse:collapse; margin-top:15px;">
+    <table>
       <thead>
-        <tr style="background:#f0f0f0;">
-          <th style="border:1px solid #ccc; padding:8px;">#</th>
-          <th style="border:1px solid #ccc; padding:8px;">Item</th>
-          <th style="border:1px solid #ccc; padding:8px;">Qty</th>
-          <th style="border:1px solid #ccc; padding:8px;">Price</th>
-          <th style="border:1px solid #ccc; padding:8px;">Total</th>
+        <tr>
+          <th>#</th>
+          <th>Item</th>
+          <th>Qty</th>
+          <th>Price (₹)</th>
+          <th>Total (₹)</th>
         </tr>
       </thead>
       <tbody id="billBody"></tbody>
     </table>
 
     <!-- TOTALS -->
-    <div style="margin-top:15px; text-align:right;">
-      <p><strong>Subtotal:</strong> ₹<span id="subTotal"></span></p>
-      <p><strong>GST (5%):</strong> ₹<span id="gstAmount"></span></p>
+    <div class="totals">
+      <p>Subtotal: ₹<span id="subTotal"></span></p>
+      <p>GST (5%): ₹<span id="gstAmount"></span></p>
       <h3>Grand Total: ₹<span id="grandTotal"></span></h3>
     </div>
 
-  </div>
+    <!-- STATUS & WARNING -->
+    <div class="status" id="statusText">⏳ Waiting for ESP32 weight verification...</div>
+    <div class="warning" id="warningBox">
+      ⚠️ Weight mismatch detected<br>
+      Difference: <span id="diffValue">0</span> g
+    </div>
 
-  <!-- STATUS & WARNING -->
-  <div class="status" id="statusText">
-    ⏳ Waiting for ESP32 to verify weight...
-  </div>
-  <div class="warning" id="warningBox">
-    ⚠️ Weight mismatch detected<br>
-    Difference: <span id="diffValue">0</span> g
+    <!-- FOOTER -->
+    <div class="footer">
+      Thank you for shopping with us! 😊<br>
+      Visit Again • Smart • Secure • Fast
+    </div>
+
   </div>
 
   <!-- PAYMENT BUTTONS -->
@@ -195,14 +250,15 @@ document.getElementById("sessionVal").innerText = SESSION_ID;
 ================================ */
 const tbody = document.getElementById("billBody");
 tbody.innerHTML = "";
+
 bill.forEach((item, i) => {
   const row = document.createElement("tr");
   row.innerHTML = `
-    <td style="border:1px solid #ccc; padding:8px;">${i + 1}</td>
-    <td style="border:1px solid #ccc; padding:8px;">${item.name}</td>
-    <td style="border:1px solid #ccc; padding:8px;">${item.qty}</td>
-    <td style="border:1px solid #ccc; padding:8px;">₹${item.price}</td>
-    <td style="border:1px solid #ccc; padding:8px;">₹${item.qty * item.price}</td>
+    <td>${i + 1}</td>
+    <td>${item.name}</td>
+    <td>${item.qty}</td>
+    <td>₹${item.price.toFixed(2)}</td>
+    <td>₹${(item.qty * item.price).toFixed(2)}</td>
   `;
   tbody.appendChild(row);
 });
@@ -221,27 +277,23 @@ document.getElementById("grandTotal").innerText = grandTotal;
    PAYMENT CONTROL
 ================================ */
 const buttons = document.querySelectorAll(".btn:not(.pdf)");
-const pdfBtn = document.getElementById("pdfBtn");
 const statusText = document.getElementById("statusText");
 const warningBox = document.getElementById("warningBox");
 const diffValue = document.getElementById("diffValue");
-const payStatus = document.getElementById("payStatus");
 
 function enablePayment() {
   buttons.forEach(b => b.disabled = false);
-  pdfBtn.disabled = false;
+  document.getElementById("pdfBtn").disabled = false;
   statusText.innerText = "✅ Weight verified. You may proceed to payment.";
   warningBox.style.display = "none";
-  payStatus.innerText = "Verified";
 }
 
 function disablePayment(diff) {
   buttons.forEach(b => b.disabled = true);
-  pdfBtn.disabled = true;
+  document.getElementById("pdfBtn").disabled = true;
   warningBox.style.display = "block";
   diffValue.innerText = diff;
   statusText.innerText = "❌ Weight mismatch. Please contact staff.";
-  payStatus.innerText = "Pending";
 }
 
 /* ===============================
@@ -269,7 +321,7 @@ async function checkValidation() {
 const validationTimer = setInterval(checkValidation, 2000);
 
 /* ===============================
-   PDF DOWNLOAD (IMPROVED)
+   PDF DOWNLOAD
 ================================ */
 function downloadInvoice() {
   const opt = {
@@ -279,7 +331,6 @@ function downloadInvoice() {
     html2canvas: { scale: 2 },
     jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
   };
-
   html2pdf().set(opt).from(document.getElementById("invoice")).save();
 }
 </script>
