@@ -73,11 +73,21 @@
     </div>
 
     <script>
-    function startShopping() {
-    localStorage.removeItem("cart_id");
-    localStorage.removeItem("session_id");
-    window.location.href = "select-cart.html";
-    }
+        // 🔥 Auto-detect cart from QR (if present)
+        const params = new URLSearchParams(window.location.search);
+        const cartFromQR = params.get("cart");
+
+        if (cartFromQR) {
+            localStorage.setItem("cart_id", cartFromQR);
+            window.location.href = "scan.html"; // auto-skip selection
+        }
+
+        // Manual flow fallback
+        function startShopping() {
+            localStorage.removeItem("cart_id");
+            localStorage.removeItem("session_id");
+            window.location.href = "select-cart.html";
+        }
     </script>
 
 </body>
