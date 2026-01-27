@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Payment Successful</title>
+
+  <!-- Your existing CSS -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+  <div class="container">
+
+    <!-- Success Icon -->
+    <div class="logo">✅</div>
+
+    <!-- Title -->
+    <div class="store-title">Payment Successful</div>
+
+    <!-- Message -->
+    <div class="tagline" style="margin-top: 10px;">
+      Thank you for shopping with <b>Smart Cart</b> 🛒
+    </div>
+
+    <!-- Success Box -->
+    <div class="success" style="display: block; margin-top: 25px;">
+      🎉 Your payment has been completed successfully!
+    </div>
+
+    <!-- Friendly Exit Message -->
+    <div style="margin-top: 25px; font-size: 16px; font-weight: 600; color: #333;">
+      You can now leave the store 😊  
+      <br/>
+      Have a great day! 🌟
+    </div>
+
+    <!-- Optional Button -->
+    <button
+      class="btn btn-primary"
+      style="margin-top: 30px;"
+      onclick="goHome()"
+    >
+      Done 👍
+    </button>
+
+    <!-- Footer -->
+    <div class="footer-text">
+      Smart Checkout • Fast • Secure • Simple
+    </div>
+
+  </div>
+
+  <script>
+    function goHome() {
+      // Optional: redirect to cart select or home
+      window.location.href = "index.html"; 
+    }
+  </script>
+
+</body>
+</html>

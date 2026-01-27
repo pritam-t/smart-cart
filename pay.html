@@ -218,9 +218,10 @@
   </div>
 
   <!-- PAYMENT BUTTONS -->
-  <button class="btn upi" disabled>📱 Pay via UPI</button>
-  <button class="btn card" disabled>💳 Pay via Card</button>
-  <button class="btn cash" disabled>💵 Pay with Cash</button>
+  <button class="btn upi" onclick="handlePayment('upi')">📱 Pay via UPI</button>
+  <button class="btn card" onclick="handlePayment('card')">💳 Pay via Card</button>
+  <button class="btn cash" onclick="handlePayment('cash')">💵 Pay with Cash</button>
+
   <button class="btn pdf" id="pdfBtn" onclick="downloadInvoice()" disabled>📄 Download Invoice</button>
   <!-- Add inside body -->
 <div id="paymentOverlay">
