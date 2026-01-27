@@ -1,48 +1,72 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Select Cart</title>
+
+  <!-- Link your CSS -->
+  <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
 
-<h2>Select Cart Number (1–8)</h2>
+  <div class="container">
+    
+    <!-- Logo / Icon -->
+    <div class="logo">🛒</div>
 
-<select id="cartSelect">
-  <option value="">-- Select Cart --</option>
-  <option value="1">Cart 1</option>
-  <option value="2">Cart 2</option>
-  <option value="3">Cart 3</option>
-  <option value="4">Cart 4</option>
-  <option value="5">Cart 5</option>
-  <option value="6">Cart 6</option>
-  <option value="7">Cart 7</option>
-  <option value="8">Cart 8</option>
-</select>
+    <!-- Title -->
+    <div class="store-title">Smart Cart</div>
+    <div class="tagline">Select your assigned cart to continue</div>
 
-<br><br>
+    <!-- Cart Selector -->
+    <div style="margin-bottom: 25px;">
+      <select id="cartSelect" class="btn" style="padding: 14px; font-size: 16px;">
+        <option value="">-- Select Cart (1–8) --</option>
+        <option value="1">Cart 1</option>
+        <option value="2">Cart 2</option>
+        <option value="3">Cart 3</option>
+        <option value="4">Cart 4</option>
+        <option value="5">Cart 5</option>
+        <option value="6">Cart 6</option>
+        <option value="7">Cart 7</option>
+        <option value="8">Cart 8</option>
+      </select>
+    </div>
 
-<button onclick="confirmCart()">Continue</button>
+    <!-- Continue Button -->
+    <button class="btn btn-primary" onclick="confirmCart()">
+      Continue →
+    </button>
 
-<script>
-function confirmCart() {
-  const cartIdRaw = document.getElementById("cartSelect").value;
+    <!-- Footer -->
+    <div class="footer-text">
+      Powered by Smart Checkout System
+    </div>
 
-  if (!cartIdRaw) {
-    alert("Please select a cart");
-    return;
-  }
+  </div>
 
-  const cartId = parseInt(cartIdRaw, 10); // convert to integer
+  <script>
+    function confirmCart() {
+      const cartIdRaw = document.getElementById("cartSelect").value;
 
-  if (Number.isNaN(cartId)) {
-    alert("Invalid cart selected");
-    return;
-  }
+      if (!cartIdRaw) {
+        alert("Please select a cart");
+        return;
+      }
 
-  localStorage.setItem("cart_id", cartId); // still stored as string, but numeric string
-  window.location.href = "scan.html";
-}
-</script>
+      const cartId = parseInt(cartIdRaw, 10);
+
+      if (Number.isNaN(cartId)) {
+        alert("Invalid cart selected");
+        return;
+      }
+
+      localStorage.setItem("cart_id", cartId);
+      window.location.href = "scan.html";
+    }
+  </script>
 
 </body>
 </html>
