@@ -167,24 +167,6 @@ window.finalizeCartAndProceed = async function () {
 
 
 /* ===============================
-   PAYMENT HANDLER
-================================ */
-
-window.handlePayment = function (method) {
-  console.log("💳 Payment started:", method);
-
-  // Disable all payment buttons
-  document.querySelectorAll(".payment-btn, .btn.upi, .btn.card, .btn.cash")
-    .forEach(btn => btn.disabled = true);
-
-  alert("Payment initiated. Please wait...");
-
-  // Wait 10 seconds, then cleanup
-  setTimeout(clearCartDataAfterPayment, 10000);
-};
-
-
-/* ===============================
    CLEAR CART DATA (SUPABASE)
 ================================ */
 

@@ -12,6 +12,25 @@
   <!-- PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
+  <script>
+    /* ===============================
+   PAYMENT HANDLER
+================================ */
+
+window.handlePayment = function (method) {
+  console.log("💳 Payment started:", method);
+
+  showPaymentAnimation();
+
+  document.querySelectorAll(".btn.upi, .btn.card, .btn.cash")
+    .forEach(btn => btn.disabled = true);
+
+  setTimeout(clearCartDataAfterPayment, 10000);
+};
+s
+
+  </script>
+
   <!-- Fonts & Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 
@@ -220,10 +239,9 @@
   </div>
 
   <!-- PAYMENT BUTTONS -->
-  <button class="btn upi" onclick="handlePayment('upi')">📱 Pay via UPI</button>
-  <button class="btn card" onclick="handlePayment('card')">💳 Pay via Card</button>
-  <button class="btn cash" onclick="handlePayment('cash')">💵 Pay with Cash</button>
-
+ <button class="btn upi">📱 Pay via UPI</button>
+<button class="btn card">💳 Pay via Card</button>
+<button class="btn cash">💵 Pay with Cash</button>
   <button class="btn pdf" id="pdfBtn" onclick="downloadInvoice()" disabled>📄 Download Invoice</button>
   <!-- Add inside body -->
 <div id="paymentOverlay">
