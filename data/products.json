@@ -57,7 +57,7 @@
     "6668846453240": {
         "name": "Biscuit",
         "price": 45,
-        "weight": "250g"
+        "weight": "100g"
     },
     "1362573641042": {
         "name": "Snacks",
@@ -72,6 +72,6 @@
     "7665125659873": {
         "name": "Sugar",
         "price": 20,
-        "weight": "605g"
+        "weight": "200g"
     }
 }
