@@ -204,6 +204,7 @@
 
     <!-- STATUS & WARNING -->
 
+
     <div class="status" id="statusText">⏳ Waiting for ESP32 weight verification...</div>
     <div class="warning" id="warningBox">
       ⚠️ Weight mismatch detected<br>
@@ -316,11 +317,6 @@ const buttons = document.querySelectorAll(".btn:not(.pdf)");
 const statusText = document.getElementById("statusText");
 const warningBox = document.getElementById("warningBox");
 const diffValue = document.getElementById("diffValue");
-
-buttons.forEach(btn => btn.disabled = true);
-document.getElementById("pdfBtn").disabled = true;
-statusText.innerText = "⏳ Waiting for ESP32 weight verification...";
-warningBox.style.display = "none";
 
 function enablePayment() {
   buttons.forEach(b => b.disabled = false);
