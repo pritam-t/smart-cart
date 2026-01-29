@@ -428,8 +428,8 @@ async function handlePayment(mode) {
     console.error("Payment save failed:", err);
   }
 
-  // ✅ REDIRECT AFTER ANIMATION
-  
+  // ✅ FInal changes without injection
+
   setTimeout(() => {
     window.location.href = "success.html";
   }, 1800);
