@@ -168,33 +168,33 @@ window.finalizeCartAndProceed = async function () {
    CLEAR CART DATA (SUPABASE)
 ================================ */
 
-async function clearCartDataAfterPayment() {
-  try {
-    console.log("🧹 Clearing Supabase data for cart:", CART_ID);
+// async function clearCartDataAfterPayment() {
+//   try {
+//     console.log("🧹 Clearing Supabase data for cart:", CART_ID);
 
-    // Delete in safe order
-    await supabase.from("cart").delete().eq("cart_id", CART_ID);
-    await supabase.from("validation").delete().eq("cart_id", CART_ID);
-    await supabase
-    .from("cart_session")
-    .update({ status: "completed" })
-    .eq("cart_id", CART_ID);
+//     // Delete in safe order
+//     await supabase.from("cart").delete().eq("cart_id", CART_ID);
+//     await supabase.from("validation").delete().eq("cart_id", CART_ID);
+//     await supabase
+//     .from("cart_session")
+//     .update({ status: "completed" })
+//     .eq("cart_id", CART_ID);
 
 
-    // Clear local storage
-    localStorage.removeItem("bill");
-    localStorage.removeItem("total");
-    localStorage.removeItem("session_id");
-    localStorage.removeItem("cart_id");
+//     // Clear local storage
+//     localStorage.removeItem("bill");
+//     localStorage.removeItem("total");
+//     localStorage.removeItem("session_id");
+//     localStorage.removeItem("cart_id");
 
-    console.log("✅ Cart cleanup completed");
+//     console.log("✅ Cart cleanup completed");
 
-    // Redirect (change if needed)
-    window.location.href = "success.html";
+//     // Redirect (change if needed)
+//     window.location.href = "success.html";
 
-  } catch (err) {
-    console.error("❌ Cleanup failed:", err);
-    alert("Payment completed, but cleanup failed. Please contact support.");
-  }
-}
+//   } catch (err) {
+//     console.error("❌ Cleanup failed:", err);
+//     alert("Payment completed, but cleanup failed. Please contact support.");
+//   }
+// }
 

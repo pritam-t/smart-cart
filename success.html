@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Payment Successful</title>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="Js/supabase.js"></script>
+
   <!-- Your existing CSS -->
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -52,12 +55,62 @@
 
   </div>
 
-  <script>
-    function goHome() {
-      // Optional: redirect to cart select or home
-      window.location.href = "index.html"; 
+<script>
+async function clearAllData() {
+  try {
+    const CART_ID = localStorage.getItem("cart_id");
+
+    console.log("🧹 Starting cleanup for cart:", CART_ID);
+
+    if (!CART_ID) {
+      console.warn("No cart id found, skipping cleanup.");
+      return;
     }
-  </script>
+
+    // Delete cart items
+    const { error: cartErr } = await supabase
+      .from("cart")
+      .delete()
+      .eq("cart_id", CART_ID);
+
+    if (cartErr) throw cartErr;
+    console.log("✅ Cart table cleared");
+
+    // Delete validation data
+    const { error: valErr } = await supabase
+      .from("validation")
+      .delete()
+      .eq("cart_id", CART_ID);
+
+    if (valErr) throw valErr;
+    console.log("✅ Validation table cleared");
+
+    // Update session
+    const { error: sessionErr } = await supabase
+      .from("cart_session")
+      .update({ status: "completed" })
+      .eq("cart_id", CART_ID);
+
+    if (sessionErr) throw sessionErr;
+    console.log("✅ Session marked completed");
+
+    // Clear browser storage
+    localStorage.clear();
+    console.log("✅ LocalStorage cleared");
+
+  } catch (err) {
+    console.error("❌ Cleanup failed:", err);
+  }
+}
+
+/* AUTO RUN ON PAGE LOAD */
+clearAllData();
+
+function goHome() {
+  window.location.href = "index.html";
+}
+</script>
+
 
 </body>
 </html>
