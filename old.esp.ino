@@ -1,246 +1,236 @@
-#include <ESP8266WiFi.h>
-#include <ESP8266HTTPClient.h>
-#include <ArduinoJson.h>
-#include <time.h>
-#include "HX711.h"
+    #include <ESP8266WiFi.h>
+    #include <ESP8266HTTPClient.h>
+    #include <ArduinoJson.h>
+    #include "HX711.h"
 
-/* ================= WIFI ================= */
-const char* ssid = "Realme 9 Pro +";
-const char* password = "12345678";
+    /* ========== WIFI ========== */
+    const char* ssid = "Realme 9 Pro +";
+    const char* password = "12345678";
 
-/* ================= SUPABASE ================= */
-const char* cartUrl =
-  "https://kathcwjxdklbdcuewiiw.supabase.co/rest/v1/cart";
+    int CART_ID = 3;
 
-const char* sessionUrl =
-  "https://kathcwjxdklbdcuewiiw.supabase.co/rest/v1/cart_session?select=status&order=created_at.desc&limit=1";
+    /* ========== SUPABASE ========== */
+    String sessionUrl =
+      "https://kathcwjxdklbdcuewiiw.supabase.co/rest/v1/cart_session"
+      "?select=id,status"
+      "&cart_id=eq." + String(CART_ID) +
+      "&order=created_at.desc&limit=1";
 
-const char* validationUrl =
-  "https://kathcwjxdklbdcuewiiw.supabase.co/rest/v1/validation";
+    String cartUrl =
+      "https://kathcwjxdklbdcuewiiw.supabase.co/rest/v1/cart"
+      "?select=weight,qty"
+      "&cart_id=eq." + String(CART_ID);
 
-const char* supabaseKey =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImthdGhjd2p4ZGtsYmRjdWV3aWl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczMzY1ODUsImV4cCI6MjA4MjkxMjU4NX0.mcgeqyyh2SHwnyddcieiZ1__whio8H_wG_uiHKnPgGQ";
+    const char* validationUrl =
+      "https://kathcwjxdklbdcuewiiw.supabase.co/rest/v1/validation";
 
-/* ================= HX711 ================= */
-#define LOADCELL_DOUT_PIN D6
-#define LOADCELL_SCK_PIN  D7
-HX711 scale;
+    const char* supabaseKey =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImthdGhjd2p4ZGtsYmRjdWV3aWl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczMzY1ODUsImV4cCI6MjA4MjkxMjU4NX0.mcgeqyyh2SHwnyddcieiZ1__whio8H_wG_uiHKnPgGQ";
 
-/* ================= BUZZER ================= */
-#define BUZZER_PIN D5
+    /* ========== HX711 ========== */
+    #define LOADCELL_DOUT_PIN D6
+    #define LOADCELL_SCK_PIN  D7
 
-/* ================= CALIBRATION ================= */
-float scale_factor = 398.856;
-long offset = 0;
+    HX711 scale;
+    float scale_factor = 225.0;   // 388.3;
+    long offset = 0;
 
-/* ================= LOGIC ================= */
-float tolerancePercent = 5.0;
-float expectedTotalWeight = 0;
+    /* ========== STATE ========== */
+    bool finalized = false;
+    bool cartFetched = false;
+    bool validationSent = false;
 
-bool cartFetched = false;
-bool fetchingInProgress = false;
-bool lastValidationState = true;
+    float lastMeasuredWeight = 0;
+    float cartWeightSum = 0;
 
-bool sessionChecked = false;
+    String activeSessionId = "";   // 🔥 IMPORTANT
 
+    /* ========== TIMERS ========== */
+    unsigned long lastWeightRead   = 0;
+    unsigned long lastSessionCheck = 0;
 
-/* ================= UTILS ================= */
-float parseWeight(String w) {
-  w.toLowerCase();
-  w.replace("ml", "");
-  w.replace("g", "");
-  w.trim();
-  return w.toFloat();
-}
+    const unsigned long WEIGHT_READ_INTERVAL   = 500;
+    const unsigned long SESSION_CHECK_INTERVAL = 8000;
 
-/* ================= SETUP ================= */
-void setup() {
-  Serial.begin(115200);
-  delay(500);
+    /* ========== SETUP ========== */
+    void setup() {
+      Serial.begin(115200);
+      delay(1000);
 
-  pinMode(BUZZER_PIN, OUTPUT);
-  digitalWrite(BUZZER_PIN, LOW);
+      Serial.println("\n🚀 Smart Cart System");
 
-  Serial.println("\n🚀 Starting Smart Cart System");
+      WiFi.begin(ssid, password);
+      Serial.print("Connecting");
+      while (WiFi.status() != WL_CONNECTED) {
+        delay(300);
+        Serial.print(".");
+      }
+      Serial.println("\n✅ WiFi Connected");
 
-  WiFi.begin(ssid, password);
-  Serial.print("Connecting to WiFi");
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-    yield();
-  }
-  Serial.println("\n✅ WiFi Connected");
+      scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
+      scale.set_gain(128);
 
-  configTime(0, 0, "pool.ntp.org", "time.nist.gov");
-  while (time(nullptr) < 100000) {
-    delay(500);
-    yield();
-  }
+      Serial.println("⚖️ Taring scale...");
+      delay(2000);
+      offset = scale.read_average(20);
+      Serial.println("✅ Ready");
+    }
 
-  scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
-  scale.set_gain(128);
-  Serial.println("⚖️ Taring scale (NO LOAD)");
-  delay(2000);
-  offset = scale.read_average(20);
+    /* ========== LOOP ========== */
+    void loop() {
 
-  Serial.print("Offset = ");
-  Serial.println(offset);
-}
+      unsigned long now = millis();
 
-/* ================= LOOP ================= */
-void loop() {
+      /* 1️⃣ LIVE WEIGHT */
+      if (!finalized && (now - lastWeightRead >= WEIGHT_READ_INTERVAL)) {
+        lastWeightRead = now;
 
-  if (!sessionChecked) {
-    sessionChecked = checkIfSessionFinalized();
-    delay(2000);   // 🔥 VERY IMPORTANT
-    return;
-  }
+        long raw = scale.read_average(10);
+        float weight = (raw - offset) / scale_factor;
+        if (weight < 0) weight = 0;
 
-  if (sessionChecked && !cartFetched) {
-    fetchExpectedWeight();
-    cartFetched = true;
-    delay(2000);   // 🔥 VERY IMPORTANT
-    return;
-  }
+        lastMeasuredWeight = weight;
 
-  if (cartFetched) {
-    checkWeight();     // NO HTTP HERE
-    delay(1000);
-  }
-}
+        Serial.print("Live Weight: ");
+        Serial.print(weight, 1);
+        Serial.println(" g");
+      }
 
+      /* 2️⃣ CHECK SESSION */
+      if (!finalized && (now - lastSessionCheck >= SESSION_CHECK_INTERVAL)) {
+        lastSessionCheck = now;
 
-/* ================= SESSION CHECK ================= */
-bool checkIfSessionFinalized() {
+        Serial.println("🔍 Checking session...");
+        finalized = checkSessionFinalized();
 
-  WiFiClientSecure client;
-  client.setInsecure();
-  HTTPClient http;
+        if (finalized) {
+          Serial.print("🟢 Session finalized | ID: ");
+          Serial.println(activeSessionId);
+        }
+      }
 
-  http.begin(client, sessionUrl);
-  http.addHeader("apikey", supabaseKey);
-  http.addHeader("Authorization", "Bearer " + String(supabaseKey));
+      /* 3️⃣ FINAL VALIDATION (ONCE) */
+      if (finalized && !validationSent) {
 
-  int code = http.GET();
+        fetchCartWeightSum();
 
-  Serial.print("Session HTTP code: ");
-  Serial.println(code);
+        Serial.println("\n🛑 WEIGHT LOCKED");
+        Serial.print("HX711: ");
+        Serial.print(lastMeasuredWeight, 1);
+        Serial.println(" g");
 
-  if (code != 200) {
-    http.end();
-    return false;
-  }
+        Serial.print("Cart Sum: ");
+        Serial.print(cartWeightSum, 1);
+        Serial.println(" g");
 
-  String payload = http.getString();
-  http.end();
+        postValidation(lastMeasuredWeight, cartWeightSum);
 
-  Serial.println(payload);
+        validationSent = true;   // 🔒 CRITICAL
+      }
 
-  StaticJsonDocument<256> doc;
-  deserializeJson(doc, payload);
+      yield();
+    }
 
-  if (doc.size() == 0) return false;
+    /* ========== SESSION CHECK ========== */
+    bool checkSessionFinalized() {
 
-  return String(doc[0]["status"]) == "finalized";
-}
+      WiFiClientSecure client;
+      client.setInsecure();
 
-/* ================= FETCH CART ================= */
-void fetchExpectedWeight() {
+      HTTPClient http;
+      http.begin(client, sessionUrl);
+      http.addHeader("apikey", supabaseKey);
+      http.addHeader("Authorization", "Bearer " + String(supabaseKey));
 
-  WiFiClientSecure client;
-  client.setInsecure();
-  HTTPClient http;
+      int code = http.GET();
+      if (code != 200) {
+        http.end();
+        return false;
+      }
 
-  http.begin(client, cartUrl);
-  http.addHeader("apikey", supabaseKey);
-  http.addHeader("Authorization", "Bearer " + String(supabaseKey));
+      String payload = http.getString();
+      http.end();
 
-  int code = http.GET();
-  yield();
+      StaticJsonDocument<256> doc;
+      if (deserializeJson(doc, payload)) return false;
+      if (doc.size() == 0) return false;
 
-  if (code != 200) {
-    Serial.println("❌ Failed to fetch cart");
-    fetchingInProgress = false;
-    http.end();
-    return;
-  }
+      activeSessionId = String(doc[0]["id"].as<const char*>());
 
-  String payload = http.getString();
-  http.end();
-  yield();
+      return String(doc[0]["status"]) == "finalized";
+    }
 
-  StaticJsonDocument<2048> doc;
-  if (deserializeJson(doc, payload)) {
-    Serial.println("❌ JSON parse error");
-    fetchingInProgress = false;
-    return;
-  }
+    /* ========== CART WEIGHT ========== */
+    float parseWeight(String w) {
+      w.toLowerCase();
+      w.replace("kg", "000");
+      w.replace("g", "");
+      w.replace("ml", "");
+      w.trim();
+      return w.toFloat();
+    }
 
-  expectedTotalWeight = 0;
+    void fetchCartWeightSum() {
 
-  for (JsonObject item : doc.as<JsonArray>()) {
-    yield();
-    float w = parseWeight(item["weight"].as<String>());
-    int q = item["qty"] | 1;
-    expectedTotalWeight += w * q;
-  }
+      WiFiClientSecure client;
+      client.setInsecure();
 
-  Serial.print("Expected TOTAL weight = ");
-  Serial.print(expectedTotalWeight);
-  Serial.println(" g");
+      HTTPClient http;
+      http.begin(client, cartUrl);
+      http.addHeader("apikey", supabaseKey);
+      http.addHeader("Authorization", "Bearer " + String(supabaseKey));
 
-  cartFetched = true;
-  fetchingInProgress = false;
-}
+      int code = http.GET();
+      if (code != 200) {
+        http.end();
+        return;
+      }
 
-/* ================= WEIGHT CHECK ================= */
-void checkWeight() {
+      String payload = http.getString();
+      http.end();
 
-  long raw = scale.read_average(10);
-  yield();
+      StaticJsonDocument<512> doc;
+      if (deserializeJson(doc, payload)) return;
 
-  float actual = (raw - offset) / scale_factor;
-  if (actual < 0) actual = 0;
+      cartWeightSum = 0;
 
-  float diff = abs(actual - expectedTotalWeight);
-  float allowed = (tolerancePercent / 100.0) * expectedTotalWeight;
-  bool valid = diff <= allowed;
+      for (JsonObject item : doc.as<JsonArray>()) {
+        float w = parseWeight(item["weight"].as<String>());
+        int qty = item["qty"] | 1;
+        cartWeightSum += w * qty;
+        yield();
+      }
+    }
 
-  if (!valid) buzzerAlert();
+    /* ========== SEND VALIDATION ========== */
+    void postValidation(float liveWeight, float cartWeight) {
 
-  if (valid != lastValidationState) {
-    sendValidationResult(valid, (int)diff);
-    lastValidationState = valid;
-  }
-}
+      int diff = abs(cartWeight - liveWeight);
+      bool verified = diff <= 20;
 
-/* ================= SEND VALIDATION ================= */
-void sendValidationResult(bool verified, int diff) {
+      WiFiClientSecure client;
+      client.setInsecure();
 
-  WiFiClientSecure client;
-  client.setInsecure();
-  HTTPClient http;
+      HTTPClient http;
+      http.begin(client, validationUrl);
 
-  http.begin(client, validationUrl);
-  http.addHeader("apikey", supabaseKey);
-  http.addHeader("Authorization", "Bearer " + String(supabaseKey));
-  http.addHeader("Content-Type", "application/json");
+      http.addHeader("apikey", supabaseKey);
+      http.addHeader("Authorization", "Bearer " + String(supabaseKey));
+      http.addHeader("Content-Type", "application/json");
+      http.addHeader("Prefer", "return=minimal");
 
-  StaticJsonDocument<200> doc;
-  doc["verified"] = verified;
-  doc["diff"] = diff;
+      StaticJsonDocument<256> doc;
+      doc["session_id"] = activeSessionId;   // 🔥 FIX
+      doc["verified"] = verified;
+      doc["diff"] = diff;
 
-  String payload;
-  serializeJson(doc, payload);
+      String payload;
+      serializeJson(doc, payload);
 
-  http.POST(payload);
-  http.end();
-}
+      int code = http.POST(payload);
 
-/* ================= BUZZER ================= */
-void buzzerAlert() {
-  digitalWrite(BUZZER_PIN, HIGH);
-  delay(1000);
-  digitalWrite(BUZZER_PIN, LOW);
-}
+      Serial.print("📤 Validation POST: ");
+      Serial.println(code);
+
+      http.end();
+    }

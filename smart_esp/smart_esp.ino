@@ -32,7 +32,7 @@ const char* supabaseKey =
 #define LOADCELL_SCK_PIN  D7
 
 HX711 scale;
-float scale_factor = 225.0;   // 388.3;
+float scale_factor = 388.3;   // 388.3 225.0;
 long offset = 0;
 
 /* ========== STATE ========== */
@@ -206,7 +206,7 @@ void fetchCartWeightSum() {
 void postValidation(float liveWeight, float cartWeight) {
 
   int diff = abs(cartWeight - liveWeight);
-  bool verified = diff <= 20;
+  bool verified = diff <= 15;
 
   WiFiClientSecure client;
   client.setInsecure();
