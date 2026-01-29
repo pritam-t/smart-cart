@@ -11,25 +11,9 @@
 
   <!-- PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="/Js/bill.js"></script>
 
-  <script>
-    /* ===============================
-   PAYMENT HANDLER
-================================ */
 
-window.handlePayment = function (method) {
-  console.log("💳 Payment started:", method);
-
-  showPaymentAnimation();
-
-  document.querySelectorAll(".btn.upi, .btn.card, .btn.cash")
-    .forEach(btn => btn.disabled = true);
-
-  setTimeout(clearCartDataAfterPayment, 10000);
-};
-s
-
-  </script>
 
   <!-- Fonts & Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
@@ -239,9 +223,10 @@ s
   </div>
 
   <!-- PAYMENT BUTTONS -->
- <button class="btn upi">📱 Pay via UPI</button>
-<button class="btn card">💳 Pay via Card</button>
-<button class="btn cash">💵 Pay with Cash</button>
+<button class="btn upi" onclick="handlePayment('upi')">📱 Pay via UPI</button>
+<button class="btn card" onclick="handlePayment('card')">💳 Pay via Card</button>
+<button class="btn cash" onclick="handlePayment('cash')">💵 Pay with Cash</button>
+
   <button class="btn pdf" id="pdfBtn" onclick="downloadInvoice()" disabled>📄 Download Invoice</button>
   <!-- Add inside body -->
 <div id="paymentOverlay">
@@ -351,6 +336,11 @@ function disablePayment(diff) {
   statusText.innerText = "❌ Weight mismatch. Please contact staff.";
 }
 
+// 🔒 Lock payment buttons by default
+buttons.forEach(b => b.disabled = true);
+document.getElementById("pdfBtn").disabled = true;
+
+
 /* ===============================
    VALIDATION POLLING (SESSION)
 ================================ */
@@ -359,22 +349,26 @@ async function checkValidation() {
     .from("validation")
     .select("verified,diff")
     .eq("session_id", SESSION_ID)
-    
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
 
-  console.log("🆔 SESSION_ID from localStorage:", SESSION_ID);
+  console.log("🔍 Validation check:", data);
 
-  if (error || !data) return;
+  // ⏳ ESP not responded yet
+  if (!data) {
+    statusText.innerText = "⏳ Waiting for ESP32 weight verification...";
+    return;
+  }
 
-  if (data.verified) {
+  if (data.verified === true) {
     enablePayment();
     clearInterval(validationTimer);
   } else {
     disablePayment(data.diff);
   }
 }
+
 
 const validationTimer = setInterval(checkValidation, 2000);
 
@@ -416,7 +410,31 @@ document.querySelectorAll(".btn.upi, .btn.card, .btn.cash").forEach(btn => {
   });
 });
 
-</script>
+async function handlePayment(mode) {
+  if (!SESSION_ID) {
+    alert("Invalid session. Please contact staff.");
+    return;
+  }
 
+  // 🔒 Prevent double click
+  buttons.forEach(b => b.disabled = true);
+
+  showPaymentAnimation();
+
+  // Optional: save payment (good for judges)
+  await supabase.from("payments").insert({
+    session_id: SESSION_ID,
+    mode: mode,
+    amount: grandTotal
+  });
+
+  // 🧹 Cleanup AFTER payment
+  setTimeout(async () => {
+    await clearCartDataAfterPayment();
+  }, 1500);
+}
+
+
+</script>
 </body>
 </html>

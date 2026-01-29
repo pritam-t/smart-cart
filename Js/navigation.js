@@ -13,12 +13,15 @@ function goToScanPage() {
   window.location.href = "scan.html";
 }
 
-/* PROTECT SCAN PAGE */
 function protectScanPage() {
-  if (!localStorage.getItem("sessionStarted")) {
+  const cartId = localStorage.getItem("cart_id");
+
+  if (!cartId) {
+    console.warn("No cart selected, redirecting...");
     window.location.href = "select-cart.html";
   }
 }
+
 
 /* PAYMENT → HOME PAGE */
 function goToHomePage() {

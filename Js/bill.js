@@ -13,9 +13,9 @@ const CART_ID_RAW = localStorage.getItem("cart_id");
 const CART_ID = parseInt(CART_ID_RAW, 10);
 
 if (!CART_ID || Number.isNaN(CART_ID)) {
-  alert("Invalid cart selected. Please start shopping again.");
-  window.location.href = "scan.html";
-  throw new Error("Invalid cart_id");
+  alert("Please select a cart to start shopping.");
+  window.location.href = "select-cart.html";
+  return; // ✅ stop execution safely
 }
 
 console.log("🛒 Cart ID:", CART_ID);
@@ -123,8 +123,6 @@ window.finalizeCartAndProceed = async function () {
 
     /* 1️⃣ CLEAR OLD DATA FOR THIS CART */
     await supabase.from("cart").delete().eq("cart_id", CART_ID);
-    await supabase.from("validation").delete().eq("cart_id", CART_ID);
-    await supabase.from("cart_session").delete().eq("cart_id", CART_ID);
 
     /* 2️⃣ CREATE NEW SESSION */
     const { data: sessionData, error: sessionError } = await supabase
@@ -177,7 +175,11 @@ async function clearCartDataAfterPayment() {
     // Delete in safe order
     await supabase.from("cart").delete().eq("cart_id", CART_ID);
     await supabase.from("validation").delete().eq("cart_id", CART_ID);
-    await supabase.from("cart_session").delete().eq("cart_id", CART_ID);
+    await supabase
+      .from("cart_session")
+      .update({ status: "completed" })
+      .eq("cart_id", CART_ID);
+
 
     // Clear local storage
     localStorage.removeItem("bill");

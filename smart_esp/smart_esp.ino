@@ -1,5 +1,6 @@
-#include <ESP8266WiFi.h>
-#include <ESP8266HTTPClient.h>
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
 #include "HX711.h"
 
@@ -28,8 +29,8 @@ const char* supabaseKey =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImthdGhjd2p4ZGtsYmRjdWV3aWl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczMzY1ODUsImV4cCI6MjA4MjkxMjU4NX0.mcgeqyyh2SHwnyddcieiZ1__whio8H_wG_uiHKnPgGQ";
 
 /* ========== HX711 ========== */
-#define LOADCELL_DOUT_PIN D6
-#define LOADCELL_SCK_PIN  D7
+#define LOADCELL_DOUT_PIN 18
+#define LOADCELL_SCK_PIN  19
 
 HX711 scale;
 float scale_factor = 388.3;   // 388.3 225.0;
