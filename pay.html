@@ -422,16 +422,16 @@ async function handlePayment(mode) {
   showPaymentAnimation();
 
   // Optional: save payment (good for judges)
-  await supabase.from("payments").insert({
-    session_id: SESSION_ID,
-    mode: mode,
-    amount: grandTotal
-  });
+  //await supabase.from("payments").insert({
+  //  session_id: SESSION_ID,
+   // mode: mode,
+    //amount: grandTotal
+  //});
 
   // 🧹 Cleanup AFTER payment
-  setTimeout(async () => {
-    await clearCartDataAfterPayment();
-  }, 1500);
+ // setTimeout(async () => {
+ //   await clearCartDataAfterPayment();
+ // }, 1500);
 }
 
 
