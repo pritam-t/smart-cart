@@ -15,10 +15,10 @@ const CART_ID = parseInt(CART_ID_RAW, 10);
 if (!CART_ID || Number.isNaN(CART_ID)) {
   alert("Please select a cart to start shopping.");
   window.location.href = "select-cart.html";
-  return; // ✅ stop execution safely
+} else {
+  console.log("🛒 Cart ID:", CART_ID);
 }
 
-console.log("🛒 Cart ID:", CART_ID);
 
 /* ===============================
    ADD PRODUCT TO BILL
@@ -176,9 +176,9 @@ async function clearCartDataAfterPayment() {
     await supabase.from("cart").delete().eq("cart_id", CART_ID);
     await supabase.from("validation").delete().eq("cart_id", CART_ID);
     await supabase
-      .from("cart_session")
-      .update({ status: "completed" })
-      .eq("cart_id", CART_ID);
+    .from("cart_session")
+    .update({ status: "completed" })
+    .eq("cart_id", CART_ID);
 
 
     // Clear local storage
