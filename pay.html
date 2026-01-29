@@ -341,9 +341,12 @@ async function checkValidation() {
     .from("validation")
     .select("verified,diff")
     .eq("session_id", SESSION_ID)
+    
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
+
+  console.log("🆔 SESSION_ID from localStorage:", SESSION_ID);
 
   if (error || !data) return;
 
