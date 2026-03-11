@@ -73,5 +73,10 @@
         "name": "Sugar",
         "price": 20,
         "weight": "210g"
+    },
+    "8507770407289":{
+        "name": "HeadPhones",
+        "price": 3000,
+        "weight": "227g"
     }
 }
