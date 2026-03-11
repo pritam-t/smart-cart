@@ -15,7 +15,7 @@ String sessionUrl =
   "https://kathcwjxdklbdcuewiiw.supabase.co/rest/v1/cart_session"
   "?select=id,status"
   "&cart_id=eq." + String(CART_ID) +
-  "&order=created_at.desc&limit=1";
+  "&order=created_at.desc&limit=1"; 
 
 String cartUrl =
   "https://kathcwjxdklbdcuewiiw.supabase.co/rest/v1/cart"
