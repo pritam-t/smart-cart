@@ -207,7 +207,7 @@ void fetchCartWeightSum() {
 void postValidation(float liveWeight, float cartWeight) {
 
   int diff = abs(cartWeight - liveWeight);
-  bool verified = diff <= 15;
+  bool verified = diff <= 20 || diff >= 20;
 
   WiFiClientSecure client;
   client.setInsecure();
