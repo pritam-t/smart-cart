@@ -212,7 +212,7 @@ Payment Authorization
 ### Project Workflow
 <p align="center">
 
-| ![Work-Flow](data\flow.png) |
+| ![Work-Flow](data/flow.png) |
 |:----------------------------------------:|
 |            **Flow-Chart**                |
 
