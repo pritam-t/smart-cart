@@ -209,53 +209,12 @@ Payment Authorization
 
 ## Project Workflow
 
-### Step 1
+### Project Workflow
+<p align="center">
 
-Customer selects a SmartCart.
-
-### Step 2
-
-Products are scanned using the web application.
-
-### Step 3
-
-Products are added to the live bill.
-
-### Step 4
-
-AI assistant analyzes the product.
-
-### Step 5
-
-Health insights and recommendations are displayed.
-
-### Step 6
-
-Customer proceeds to payment.
-
-### Step 7
-
-ESP8266 verifies cart weight.
-
-### Step 8
-
-System compares expected and actual weight.
-
-### Step 9
-
-If verification succeeds:
-
-* Payment is enabled
-
-Otherwise:
-
-* Payment remains blocked
-
-### Step 10
-
-Invoice is generated.
-
----
+| ![Work-Flow](data\flow.png) |
+|:----------------------------------------:|
+|            **Flow-Chart**                |
 
 ## Advantages
 
