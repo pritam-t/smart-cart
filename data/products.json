@@ -8,7 +8,7 @@
         "name": "Bread",
         "price": 40,
         "weight": "400g"
-    },  
+    },
     "7032572402817": {
         "name": "Chocolate",
         "price": 50,
@@ -32,7 +32,7 @@
     "9033474318990": {
         "name": "Deodorant",
         "price": 25,
-        "weight": "112g"    
+        "weight": "112g"
     },
     "3360540974160": {
         "name": "Face-Wash",
@@ -48,7 +48,7 @@
         "name": "Soap",
         "price": 10,
         "weight": "20g"
-    }, 
+    },
     "1286480389555": {
         "name": "Shoes",
         "price": 25,
@@ -74,9 +74,35 @@
         "price": 20,
         "weight": "210g"
     },
-    "8507770407289":{
+    "8507770407289": {
         "name": "HeadPhones",
         "price": 3000,
         "weight": "35g"
+    },
+
+    "890000000001": {
+        "name": "HeadPhones",
+        "price": 3000,
+        "weight": "35g"
+    },
+    "890000000002": {
+        "name": "Bread",
+        "price": 40,
+        "weight": "400g"
+    },
+    "890000000003": {
+        "name": "Chocolate",
+        "price": 50,
+        "weight": "112g"
+    },
+    "890000000004": {
+        "name": "Juice",
+        "price": 20,
+        "weight": "140g"
+    },
+    "890000000005": {
+        "name": "Sugar",
+        "price": 20,
+        "weight": "210g"
     }
 }
