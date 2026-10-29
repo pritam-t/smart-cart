@@ -1,23 +1,23 @@
 {
     "7143265017727": {
-        "name": "Amul Milk",
-        "price": 30,
-        "weight": "112g"
+        "name": "Marie Gold",
+        "price": 10,
+        "weight": "50g"
     },
     "6161235907107": {
-        "name": "Bread",
-        "price": 40,
-        "weight": "400g"
-    },  
+        "name": "Sprite",
+        "price": 20,
+        "weight": "175g"
+    },
     "7032572402817": {
-        "name": "Chocolate",
-        "price": 50,
-        "weight": "112g"
+        "name": "Chips",
+        "price": 10,
+        "weight": "71g"
     },
     "1433116676521": {
-        "name": "Yoga-Bar",
-        "price": 25,
-        "weight": "120g"
+        "name": "Maggi",
+        "price": 140,
+        "weight": "145g"
     },
     "8811882639064": {
         "name": "Mango Juice",
@@ -32,7 +32,7 @@
     "9033474318990": {
         "name": "Deodorant",
         "price": 25,
-        "weight": "112g"    
+        "weight": "112g"
     },
     "3360540974160": {
         "name": "Face-Wash",
@@ -48,7 +48,7 @@
         "name": "Soap",
         "price": 10,
         "weight": "20g"
-    }, 
+    },
     "1286480389555": {
         "name": "Shoes",
         "price": 25,
@@ -74,9 +74,35 @@
         "price": 20,
         "weight": "210g"
     },
-    "8507770407289":{
+    "8507770407289": {
         "name": "HeadPhones",
         "price": 3000,
         "weight": "35g"
+    },
+    "8900000000012": {
+    "name": "HeadPhones",
+    "price": 3000,
+    "weight": "35g"
+    },
+    "8900000000029": {
+        "name": "Bread",
+        "price": 40,
+        "weight": "400g"
+    },
+    "8900000000036": {
+        "name": "Chocolate",
+        "price": 50,
+        "weight": "112g"
+    },
+    "8900000000043": {
+        "name": "Juice",
+        "price": 20,
+        "weight": "140g"
+    },
+    "8900000000050": {
+        "name": "Sugar",
+        "price": 20,
+        "weight": "210g"
     }
+    
 }
